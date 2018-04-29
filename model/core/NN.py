@@ -17,10 +17,12 @@ class NN(object):
         self.num_classify_hidden = num_classify_hidden
         self.label_prop = tf.constant(label_prop, dtype=tf.float32)
         self.batch_size = args.batch_size
-        # self.dropout_keep_prob = args.dropout_keep_prob
+        self.dropout_keep_prob = args.dropout_keep_prob
         #
         self.use_propensity = args.use_propensity
         self.use_comp = args.use_comp
+        self.topk = args.topk
+        self.factor = args.factor
         #
         self.weight_initializer = tf.contrib.layers.xavier_initializer()
         self.const_initializer = tf.constant_initializer()
@@ -66,6 +68,7 @@ class NN(object):
         y = self.y
         # x_emb
         feature_v = tf.layers.batch_normalization(self.x_feature_v)
+        #feature_v = tf.layers.dropout(feature_v, rate=self.dropout_keep_prob)
         x_emb = tf.reduce_sum(tf.multiply(x, tf.expand_dims(feature_v, -1)), axis=1)
         # x_emb: [batch_size, word_embedding_dim]
         with tf.name_scope('output'):
@@ -85,7 +88,7 @@ class NN(object):
         if self.use_propensity:
             loss = tf.reduce_sum(
                 tf.multiply(tf.nn.sigmoid_cross_entropy_with_logits(labels=y, logits=y_out), tf.expand_dims(self.label_prop, 0))
-            )
+            ) +
         else:
             loss = tf.reduce_sum(tf.nn.sigmoid_cross_entropy_with_logits(labels=y, logits=y_out))
         return x_emb, tf.sigmoid(y_out), loss

@@ -35,6 +35,10 @@ def main():
                        help='whether to use propensity loss')
     parse.add_argument('-use_comp', '--use_comp', type=int, default=1,
                        help='whether to add competitive layer')
+    parse.add_argument('-topk', '--topk', type=int, default=10,
+                       help='top k neurons in competitive layer')
+    parse.add_argument('-factor', '--factor', type=float, default=0.01,
+                       help='factor in competitive layer')
     # ---------- training parameters --------
     parse.add_argument('-n_epochs', '--n_epochs', type=int, default=10, help='number of epochs')
     parse.add_argument('-batch_size', '--batch_size', type=int, default=32, help='batch size for training')
