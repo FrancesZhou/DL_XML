@@ -21,7 +21,7 @@ from model.utils.op_utils import *
 from model.utils.io_utils import load_pickle, dump_pickle
 
 
-class ModelSolver3(object):
+class ModelSolver(object):
     def __init__(self, model, train_data, test_data, **kwargs):
         self.model = model
         self.train_data = train_data
@@ -108,6 +108,8 @@ class ModelSolver3(object):
                 #print 'num of validate pid batches: %d' % len(val_pid_batches)
                 pre_pid_label_prop = {}
                 tar_pid_label_prop = {}
+                pre_pid_label = {}
+                tar_pid_label = {}
                 widgets = ['Validate: ', Percentage(), ' ', Bar('#'), ' ', ETA()]
                 pbar = ProgressBar(widgets=widgets, maxval=len(val_pid_batches)).start()
                 for i in val_pid_batches:
@@ -128,8 +130,12 @@ class ModelSolver3(object):
                         pre_label_index = np.argsort(-np.array(y_p[p_i]))[:5]
                         pre_pid_label_prop[pid] = [y[p_i][ind]*(train_loader.label_prop[ind]) for ind in pre_label_index]
                         tar_pid_label_prop[pid] = [train_loader.label_prop[q] for q in train_loader.label_data[pid]]
+                        #
+                        pre_pid_label[pid] = [y[p_i][ind] for ind in pre_label_index]
+                        tar_pid_label[pid] = np.ones_like(train_loader.label_data[pid])
                 pbar.finish()
-                val_results = results_for_prop_vector(tar_pid_label_prop, pre_pid_label_prop)
+                val_results = results_for_prop_vector(tar_pid_label, pre_pid_label)
+                val_prop_results = results_for_prop_vector(tar_pid_label_prop, pre_pid_label_prop)
                 # reset train_loader
                 train_loader.reset_data()
                 # ====== output loss ======
@@ -139,8 +145,12 @@ class ModelSolver3(object):
                 w_text = 'at epoch %d, val loss is %f \n' % (e, val_loss/len(val_pid_batches))
                 print w_text
                 o_file.write(w_text)
-                w_text = 'at epoch %d, val_results: ' % e
-                w_text = w_text + str(val_results)
+                w_text = 'at epoch %d, val_results: \n' % e
+                w_text = w_text + str(val_results) + '\n'
+                print w_text
+                o_file.write(w_text)
+                w_text = 'at epoch {0}, val_prop_results: \n'.format(e)
+                w_text = w_text + str(val_prop_results) + '\n'
                 print w_text
                 o_file.write(w_text)
                 # ====== save model ========
@@ -179,19 +189,23 @@ class ModelSolver3(object):
                             pre_pid_label_prop[pid] = [y[p_i][ind] * (test_loader.label_prop[ind]) for ind in
                                                        pre_label_index]
                             tar_pid_label_prop[pid] = [test_loader.label_prop[q] for q in test_loader.label_data[pid]]
+                            #
+                            pre_pid_label[pid] = [y[p_i][ind] for ind in pre_label_index]
+                            tar_pid_label[pid] = np.ones_like(test_loader.label_data[pid])
                     pbar.finish()
-                    test_results = results_for_prop_vector(tar_pid_label_prop, pre_pid_label_prop)
+                    test_results = results_for_prop_vector(tar_pid_label, pre_pid_label)
+                    test_prop_results = results_for_prop_vector(tar_pid_label_prop, pre_pid_label_prop)
                     w_text = 'at epoch %d, test loss is %f \n' % (e, test_loss/len(test_pid_batches))
                     print w_text
                     o_file.write(w_text)
-                    p1_txt = 'prec_wt@1: %f \n' % test_results[0]
-                    p3_txt = 'prec_wt@3: %f \n' % test_results[1]
-                    p5_txt = 'prec_wt@5: %f \n' % test_results[2]
-                    ndcg1_txt = 'ndcg_wt@1: %f \n' % test_results[3]
-                    ndcg3_txt = 'ndcg_wt@3: %f \n' % test_results[4]
-                    ndcg5_txt = 'ndcg_wt@5: %f \n' % test_results[5]
-                    o_file.write(p1_txt + p3_txt + p5_txt + ndcg1_txt + ndcg3_txt + ndcg5_txt)
-                    print p1_txt + p3_txt + p5_txt + ndcg1_txt + ndcg3_txt + ndcg5_txt
+                    w_text = 'at epoch %d, test_results: \n' % e
+                    w_text = w_text + str(test_results) + '\n'
+                    print w_text
+                    o_file.write(w_text)
+                    w_text = 'at epoch {0}, test_prop_results: \n'.format(e)
+                    w_text = w_text + str(test_prop_results) + '\n'
+                    print w_text
+                    o_file.write(w_text)
             # save model
             save_name = self.model_path + 'model_final'
             saver.save(sess, save_name)

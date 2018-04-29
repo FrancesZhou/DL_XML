@@ -12,9 +12,8 @@ import numpy as np
 from model.preprocessing.preprocessing import generate_label_embedding_from_file_2
 from model.preprocessing.dataloader import *
 from model.core.NN import NN
-from model.core.solver3 import ModelSolver3
+from model.core.solver import ModelSolver
 from model.utils.io_utils import load_pickle
-from datasets.material.utils import read_label_pairs
 
 
 def main():
@@ -23,17 +22,19 @@ def main():
     parse.add_argument('-gpu', '--gpu', type=str, default='0', help='which gpu to use: 0 or 1')
     # ---------- foler path of train/test data -------
     parse.add_argument('-folder', '--folder_path', type=str,
-                       default='datasets/EUR-Lex/trn_tst_data/',
+                       default='datasets/eurlex/trn_tst_data/',
                        help='path to train/test data')
-    # ---------- vocab and word embeddings --------
-    parse.add_argument('-word_embedding_dim', '--word_embedding_dim', type=int, default=100, help='dim of word embedding')
     # ---------- model ----------
+    parse.add_argument('-word_embedding_dim', '--word_embedding_dim', type=int, default=100, help='dim of word embedding')
     parse.add_argument('-max_seq_len', '--max_seq_len', type=int, default=500, help='maximum sequence length')
     parse.add_argument('-model', '--model', type=str, default='NN', help='model: NN, LSTM, biLSTM, CNN')
-    parse.add_argument('-use_attention', '--use_attention', type=int, default=1, help='whether to use attention')
     parse.add_argument('-pretrained_model', '--pretrained_model_path', type=str, default=None, help='path to the pretrained model')
     parse.add_argument('-dropout_keep_prob', '--dropout_keep_prob', type=float,
                        default=0.5, help='keep probability in dropout layer')
+    parse.add_argument('-use_propensity', '--use_propensity', type=int, default=1,
+                       help='whether to use propensity loss')
+    parse.add_argument('-use_comp', '--use_comp', type=int, default=1,
+                       help='whether to add competitive layer')
     # ---------- training parameters --------
     parse.add_argument('-n_epochs', '--n_epochs', type=int, default=10, help='number of epochs')
     parse.add_argument('-batch_size', '--batch_size', type=int, default=32, help='batch size for training')
@@ -48,14 +49,9 @@ def main():
     os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
     print '-------------- load labels ------------------------'
     label_prop_dict = load_pickle(args.folder_path + 'inv_prop_dict.pkl')
+    label_prop = load_pickle(args.folder_path + 'inv_prop.pkl')
     all_labels = label_prop_dict.keys()
     num_labels = np.max(all_labels) + 1
-    label_prop = np.zeros(num_labels)
-    for i in xrange(num_labels):
-        try:
-            label_prop[i] = label_prop_dict[i]
-        except KeyError:
-            label_prop[i] = 1.0
     print 'real number of labels: ' + str(len(all_labels))
     print 'maximum label: ' + str(np.max(all_labels))
     print 'minimum label: ' + str(np.min(all_labels))
@@ -70,16 +66,13 @@ def main():
                                   batch_size=args.batch_size, max_seq_len=args.max_seq_len)
     test_loader = DataLoader_all(test_doc, test_label, num_labels, label_prop_dict,
                                  batch_size=args.batch_size, max_seq_len=args.max_seq_len)
-    # ----------------------- train ------------------------
     print '============== build model ...'
-    if 'NN' in args.model:
-        print 'build NN model ...'
-        model = NN(args.max_seq_len, 5000, args.word_embedding_dim, num_labels, label_prop, 32, args)
-        args.if_use_seq_len = 1
+    print 'build NN model ...'
+    model = NN(args.max_seq_len, 5000, args.word_embedding_dim, num_labels, label_prop, 32, args)
+    args.if_use_seq_len = 1
 
     print '================= model solver ...'
-    # solver: __init__(self, model, train_data, test_data, **kwargs):
-    solver = ModelSolver3(model, train_loader, test_loader,
+    solver = ModelSolver(model, train_loader, test_loader,
                           n_epochs=args.n_epochs,
                           batch_size=args.batch_size,
                           update_rule=args.update_rule,
