@@ -147,11 +147,11 @@ class ModelSolver(object):
                 o_file.write(w_text)
                 w_text = 'at epoch %d, val_results: \n' % e
                 w_text = w_text + str(val_results) + '\n'
-                print w_text
+                #print w_text
                 o_file.write(w_text)
                 w_text = 'at epoch {0}, val_prop_results: \n'.format(e)
                 w_text = w_text + str(val_prop_results) + '\n'
-                print w_text
+                #print w_text
                 o_file.write(w_text)
                 # ====== save model ========
                 save_name = self.model_path + 'model'

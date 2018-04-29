@@ -33,21 +33,21 @@ class NN(object):
         self.y = tf.placeholder(tf.float32, [None, self.label_output_dim])
         self.seqlen = tf.placeholder(tf.int32, [None])
 
-    def competitive_layer(self, y_out, topk=10, factor=2):
+    def competitive_layer(self, y_out, topk=10, factor=0.1):
         x = y_out
         # size: [batch_size, label_output_dim]
         P = (x + tf.abs(x))/2
         values, indices = tf.nn.top_k(P, topk)
         my_range = tf.expand_dims(tf.range(0, tf.shape(indices)[0]), 1)
-        my_range_repeated = tf.tile(my_range, [1, topk / 2])
+        my_range_repeated = tf.tile(my_range, [1, topk])
         full_indices = tf.stack([my_range_repeated, indices], axis=2)
         full_indices = tf.reshape(full_indices, [-1, 2])
         P_reset = tf.sparse_to_dense(full_indices, tf.shape(x), tf.reshape(values, [-1]), default_value=0.,
                                      validate_indices=False)
         pos_value = tf.reduce_sum(P - P_reset, 1, keepdims=True)
         #
-        ones_like_reset = tf.multiply(tf.sparse_to_dense(full_indices, tf.shape(x), tf.reshape(tf.ones_like(values), [-1]),
-                                             default_value=0., validate_indices=False))
+        ones_like_reset = tf.sparse_to_dense(full_indices, tf.shape(x), tf.reshape(tf.ones_like(values), [-1]),
+                                             default_value=0., validate_indices=False)
         # pos_value: [batch_size, 1]
         # label_prop: [label_output_dim]
         P_tmp = factor * tf.multiply(tf.matmul(pos_value, tf.expand_dims(self.label_prop, axis=0)),
