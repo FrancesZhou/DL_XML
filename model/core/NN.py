@@ -69,8 +69,9 @@ class NN(object):
         # x: [batch_size, max_seq_len, word_embedding_dim]
         y = self.y
         # x_emb
+        feature_v = self.x_feature_v
         feature_v = tf.layers.batch_normalization(self.x_feature_v, training=self.training)
-        feature_v = tf.layers.dropout(feature_v, rate=self.dropout_keep_prob, training=self.training)
+        #feature_v = tf.layers.dropout(feature_v, rate=self.dropout_keep_prob, training=self.training)
         x_emb = tf.reduce_sum(tf.multiply(x, tf.expand_dims(feature_v, -1)), axis=1)
         # x_emb: [batch_size, word_embedding_dim]
         with tf.name_scope('output'):
@@ -80,7 +81,7 @@ class NN(object):
             y_hidden = tf.nn.relu(tf.add(tf.matmul(x_emb, weight_1), bias_1))
             # BN and dropout
             y_hidden = tf.layers.batch_normalization(y_hidden, training=self.training)
-            y_hidden = tf.layers.dropout(y_hidden, rate=self.dropout_keep_prob, training=self.training)
+            #y_hidden = tf.layers.dropout(y_hidden, rate=self.dropout_keep_prob, training=self.training)
             #
             weight_2 = tf.get_variable('weight_2', [self.num_classify_hidden, self.label_output_dim],
                                        initializer=self.weight_initializer)

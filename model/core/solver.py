@@ -91,7 +91,7 @@ class ModelSolver(object):
                     _, x_feature_id, x_feature_v, seq_l, y = train_loader.get_pid_x(train_loader.train_pids,
                                                                                     i*self.batch_size, (i+1)*self.batch_size)
                     x_feature_v = x_feature_v/np.linalg.norm(x_feature_v, 2, axis=-1, keepdims=True)
-                    #x_feature_v += np.random.normal(0, 0.01, x_feature_v.shape)
+                    #x_feature_v += np.random.normal(0, 0.0001, x_feature_v.shape)
                     if len(y) == 0:
                         continue
                     feed_dict = {self.model.x_feature_id: np.array(x_feature_id, dtype=np.int32),
@@ -122,7 +122,7 @@ class ModelSolver(object):
                                  self.model.x_feature_v: np.array(x_feature_v, dtype=np.float32),
                                  self.model.y: np.array(y),
                                  self.model.seqlen: np.array(seq_l),
-                                 self.model.training: False
+                                 self.model.training: True
                                  }
                     y_p, l_ = sess.run([y_, loss], feed_dict)
                     val_loss += l_
@@ -181,7 +181,7 @@ class ModelSolver(object):
                                      self.model.x_feature_v: np.array(x_feature_v, dtype=np.float32),
                                      self.model.y: np.array(y),
                                      self.model.seqlen: np.array(seq_l),
-                                     self.model.training: False
+                                     self.model.training: True
                                      }
                         y_p, l_ = sess.run([y_, loss], feed_dict)
                         test_loss += l_
