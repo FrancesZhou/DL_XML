@@ -70,7 +70,7 @@ class NN(object):
         y = self.y
         # x_emb
         feature_v = self.x_feature_v
-        feature_v = tf.layers.batch_normalization(self.x_feature_v, training=self.training)
+        feature_v = tf.layers.batch_normalization(feature_v, training=self.training)
         #feature_v = tf.layers.dropout(feature_v, rate=self.dropout_keep_prob, training=self.training)
         x_emb = tf.reduce_sum(tf.multiply(x, tf.expand_dims(feature_v, -1)), axis=1)
         # x_emb: [batch_size, word_embedding_dim]
@@ -89,15 +89,25 @@ class NN(object):
             y_out = tf.matmul(y_hidden, weight_2)
             # y_out: [batch_size, label_output_dim]
             # competitive layer
+            eps = tf.constant(value=np.finfo(float).eps, name='numpy_eps')
             if self.use_comp:
                 y_out = self.competitive_layer(y_out)
+                y_out = tf.where(tf.greater(y_out, 0),
+                                 tf.sigmoid(y_out), tf.ones_like(y_out)*eps)
         # loss
         if self.use_propensity:
-            loss = tf.reduce_sum(
-                tf.multiply(tf.nn.sigmoid_cross_entropy_with_logits(labels=y, logits=y_out), tf.expand_dims(self.label_prop, 0))
-            ) + self.lamb*tf.nn.l2_loss(weight_1) + self.lamb*tf.nn.l2_loss(weight_2)
+            # loss = tf.reduce_sum(
+            #     tf.multiply(tf.nn.sigmoid_cross_entropy_with_logits(labels=y, logits=y_out), tf.expand_dims(self.label_prop, 0))
+            # ) + self.lamb*tf.nn.l2_loss(weight_1) + self.lamb*tf.nn.l2_loss(weight_2)
+            loss = -tf.reduce_sum(tf.multiply(
+                tf.add(tf.multiply(y, tf.log(y_out)),
+                       tf.multiply(1-y, tf.log(1-y_out))),
+                tf.expand_dims(self.label_prop, 0))
+            )
         else:
-            loss = tf.reduce_sum(tf.nn.sigmoid_cross_entropy_with_logits(labels=y, logits=y_out))
+            #loss = tf.reduce_sum(tf.nn.sigmoid_cross_entropy_with_logits(labels=y, logits=y_out))
+            loss = -tf.reduce_sum(tf.add(tf.multiply(y, tf.log(y_out)),
+                                         tf.multiply(1 - y, tf.log(1 - y_out))))
         return x_emb, tf.sigmoid(y_out), loss
 
 
