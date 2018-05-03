@@ -139,10 +139,10 @@ class ModelSolver(object):
                 # reset train_loader
                 train_loader.reset_data()
                 # ====== output loss ======
-                w_text = 'at epoch %d, train loss is %f \n' % (e, curr_loss/len(train_pid_batches))
+                w_text = 'at epoch %d, train loss is %f ' % (e, curr_loss/len(train_pid_batches))
                 print w_text
                 o_file.write(w_text)
-                w_text = 'at epoch %d, val loss is %f \n' % (e, val_loss/len(val_pid_batches))
+                w_text = 'at epoch %d, val loss is %f ' % (e, val_loss/len(val_pid_batches))
                 print w_text
                 o_file.write(w_text)
                 w_text = 'at epoch %d, val_results: \n' % e
@@ -195,7 +195,7 @@ class ModelSolver(object):
                     pbar.finish()
                     test_results = results_for_prop_vector(tar_pid_label, pre_pid_label)
                     test_prop_results = results_for_prop_vector(tar_pid_label_prop, pre_pid_label_prop)
-                    w_text = 'at epoch %d, test loss is %f \n' % (e, test_loss/len(test_pid_batches))
+                    w_text = 'at epoch %d, test loss is %f ' % (e, test_loss/len(test_pid_batches))
                     print w_text
                     o_file.write(w_text)
                     w_text = 'at epoch %d, test_results: \n' % e

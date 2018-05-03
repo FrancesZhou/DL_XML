@@ -39,6 +39,8 @@ def main():
                        help='top k neurons in competitive layer')
     parse.add_argument('-factor', '--factor', type=float, default=0.01,
                        help='factor in competitive layer')
+    parse.add_argument('-lamb', '--lamb', type=float, default=0.002,
+                       help='lambda for weight regularization')
     # ---------- training parameters --------
     parse.add_argument('-n_epochs', '--n_epochs', type=int, default=10, help='number of epochs')
     parse.add_argument('-batch_size', '--batch_size', type=int, default=32, help='batch size for training')
