@@ -97,7 +97,8 @@ class ModelSolver(object):
                     feed_dict = {self.model.x_feature_id: np.array(x_feature_id, dtype=np.int32),
                                  self.model.x_feature_v: np.array(x_feature_v, dtype=np.float32),
                                  self.model.y: np.array(y, dtype=np.float32),
-                                 self.model.seqlen: np.array(seq_l, dtype=np.int32)
+                                 self.model.seqlen: np.array(seq_l, dtype=np.int32),
+                                 self.model.training: True
                                  }
                     _, l_ = sess.run([train_op, loss], feed_dict)
                     curr_loss += l_
@@ -120,7 +121,8 @@ class ModelSolver(object):
                     feed_dict = {self.model.x_feature_id: np.array(x_feature_id, dtype=np.int32),
                                  self.model.x_feature_v: np.array(x_feature_v, dtype=np.float32),
                                  self.model.y: np.array(y),
-                                 self.model.seqlen: np.array(seq_l)
+                                 self.model.seqlen: np.array(seq_l),
+                                 self.model.training: False
                                  }
                     y_p, l_ = sess.run([y_, loss], feed_dict)
                     val_loss += l_
@@ -178,7 +180,8 @@ class ModelSolver(object):
                         feed_dict = {self.model.x_feature_id: np.array(x_feature_id, dtype=np.int32),
                                      self.model.x_feature_v: np.array(x_feature_v, dtype=np.float32),
                                      self.model.y: np.array(y),
-                                     self.model.seqlen: np.array(seq_l)
+                                     self.model.seqlen: np.array(seq_l),
+                                     self.model.training: False
                                      }
                         y_p, l_ = sess.run([y_, loss], feed_dict)
                         test_loss += l_
