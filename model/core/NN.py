@@ -88,7 +88,7 @@ class NN(object):
         if self.use_propensity:
             loss = tf.reduce_sum(
                 tf.multiply(tf.nn.sigmoid_cross_entropy_with_logits(labels=y, logits=y_out), tf.expand_dims(self.label_prop, 0))
-            ) +
+            ) + 0.002*tf.nn.l2_loss(weight_1) + 0.002*tf.nn.l2_loss(weight_2)
         else:
             loss = tf.reduce_sum(tf.nn.sigmoid_cross_entropy_with_logits(labels=y, logits=y_out))
         return x_emb, tf.sigmoid(y_out), loss
