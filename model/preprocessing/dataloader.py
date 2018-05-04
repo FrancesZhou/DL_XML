@@ -98,6 +98,7 @@ class DataLoader_all():
         self.prop_dis = np.sum(self.label_prop)
         sigma = 1
         print 'calculate hamming distance'
+        #print pid_num
         for l_ind in label_sort:
             ac_pid_index = pid_label_matrix[:, l_ind].nonzero()[0]
             # calculate the distance between these pids
@@ -105,17 +106,22 @@ class DataLoader_all():
                 for j in range(i+1, len(ac_pid_index)):
                     pid_i = ac_pid_index[i]
                     pid_j = ac_pid_index[j]
+                    #print pid_i
+                    #print pid_j
                     dis_i_j = self.distance_i_j(self.label_data[self.index_pids[pid_i]],
                                                 self.label_data[self.index_pids[pid_j]])
-                    dis_matrix[pid_i][pid_j] = np.exp(-dis_i_j*dis_i_j/(2*sigma*sigma))
-                    dis_matrix[pid_j][pid_i] = dis_matrix[pid_i][pid_j]
+                    dis_matrix[pid_i, pid_j] = np.exp(-dis_i_j*dis_i_j/(2*sigma*sigma))
+                    dis_matrix[pid_j, pid_i] = dis_matrix[pid_i, pid_j]
         print 'done'
         print 'calculate probability'
         for nz_index in set(dis_matrix.nonzero()[1]):
             dis_matrix[:, nz_index] = dis_matrix[:, nz_index]/np.sum(dis_matrix[:, nz_index])
         print 'done'
         print 'calculate symmetrical probability'
-        for nz_row, nz_col in dis_matrix.nonzero():
+        for nz_index in zip(*dis_matrix.nonzero()):
+            nz_row, nz_col = nz_index
+            #print nz_row
+            #print nz_col
             p_i_j = (dis_matrix[nz_row, nz_col] + dis_matrix[nz_col, nz_row])/2
             try:
                 self.pid_dis[self.index_pids[nz_row]][self.index_pids[nz_col]] = p_i_j
