@@ -108,13 +108,14 @@ class ModelSolver(object):
                 pbar.finish()
                 # ---- sne regularization ----
                 if self.use_sne:
-                    num_sne_points = len(train_loader.index_pids)
-                    sne_pids = xrange(num_sne_points)
+                    sne_pids = train_loader.pid_dis.keys()
+                    num_sne_points = len(sne_pids)
+                    sne_pids_batch = xrange(num_sne_points)
                     widgets = ['Train: ', Percentage(), ' ', Bar('-'), ' ', ETA()]
                     pbar = ProgressBar(widgets=widgets, maxval=num_sne_points).start()
-                    for i in sne_pids:
+                    for i in sne_pids_batch:
                         pbar.update(i)
-                        p1_f_id, p1_f_v, p2_f_id, p2_f_v, p2_dis = train_loader.get_pid_pid_dis(i)
+                        p1_f_id, p1_f_v, p2_f_id, p2_f_v, p2_dis = train_loader.get_pid_pid_dis(sne_pids[i])
                         feed_dict = {self.model.p1_f_id: p1_f_id,
                                      self.model.p1_f_v: p1_f_v,
                                      self.model.p2_f_id: p2_f_id,

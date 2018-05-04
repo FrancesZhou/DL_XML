@@ -93,7 +93,7 @@ class DataLoader_all():
         dis_matrix = csc_matrix((pid_num, pid_num), dtype=np.float32)
         self.pid_dis = {}
         # self.pid_pid_dis = []
-        label_sort = np.argsort(-np.array(self.label_prop))[:int(self.num_labels*self.ac_lbl_ratio)]
+        label_sort = np.argsort(-self.label_prop)[:int(self.num_labels*self.ac_lbl_ratio)]
         #
         self.prop_dis = np.sum(self.label_prop)
         sigma = 1
@@ -149,8 +149,8 @@ class DataLoader_all():
         print 'done'
         # np.random.shuffle(self.pid_pid_dis)
 
-    def get_pid_pid_dis(self, i):
-        pid = self.index_pids[i]
+    def get_pid_pid_dis(self, pid):
+        #pid = self.index_pids[i]
         p1_f_id = np.expand_dims(self.x_feature_indices[pid], axis=0)
         p1_f_v = np.expand_dims(self.x_feature_values[pid], axis=0)
         p2_id, p2_dis = zip(*(self.pid_dis[pid].items()))
