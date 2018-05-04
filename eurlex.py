@@ -31,6 +31,8 @@ def main():
     parse.add_argument('-pretrained_model', '--pretrained_model_path', type=str, default=None, help='path to the pretrained model')
     parse.add_argument('-dropout_keep_prob', '--dropout_keep_prob', type=float,
                        default=0.5, help='keep probability in dropout layer')
+    parse.add_argument('-use_sne', '--use_sne', type=int, default=0,
+                       help='whether to use sne regularization')
     parse.add_argument('-use_propensity', '--use_propensity', type=int, default=1,
                        help='whether to use propensity loss')
     parse.add_argument('-use_comp', '--use_comp', type=int, default=1,
@@ -68,9 +70,9 @@ def main():
     train_label = load_pickle(args.folder_path + 'train_label.pkl')
     test_label = load_pickle(args.folder_path + 'test_label.pkl')
     print '============== create train/test data loader ...'
-    train_loader = DataLoader_all(train_doc, train_label, num_labels, label_prop_dict,
+    train_loader = DataLoader_all(train_doc, train_label, num_labels, label_prop,
                                   batch_size=args.batch_size, max_seq_len=args.max_seq_len)
-    test_loader = DataLoader_all(test_doc, test_label, num_labels, label_prop_dict,
+    test_loader = DataLoader_all(test_doc, test_label, num_labels, label_prop,
                                  batch_size=args.batch_size, max_seq_len=args.max_seq_len)
     print '============== build model ...'
     print 'build NN model ...'
@@ -79,15 +81,16 @@ def main():
 
     print '================= model solver ...'
     solver = ModelSolver(model, train_loader, test_loader,
-                          n_epochs=args.n_epochs,
-                          batch_size=args.batch_size,
-                          update_rule=args.update_rule,
-                          learning_rate=args.learning_rate,
-                          pretrained_model=args.pretrained_model_path,
-                          model_path=args.folder_path + args.model + '/',
-                          log_path=args.folder_path + args.model + '/',
-                          test_path=args.folder_path + args.model + '/'
-                          )
+                         n_epochs=args.n_epochs,
+                         batch_size=args.batch_size,
+                         update_rule=args.update_rule,
+                         learning_rate=args.learning_rate,
+                         pretrained_model=args.pretrained_model_path,
+                         model_path=args.folder_path + args.model + '/',
+                         log_path=args.folder_path + args.model + '/',
+                         test_path=args.folder_path + args.model + '/',
+                         use_sne=args.use_sne
+                         )
     # train
     if args.train:
         print '================= begin training...'

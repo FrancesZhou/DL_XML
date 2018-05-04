@@ -40,7 +40,7 @@ class ModelSolver(object):
         self.log_path = kwargs.pop('log_path', './log/')
         self.pretrained_model = kwargs.pop('pretrained_model', None)
         self.test_path = kwargs.pop('test_path', None)
-        self.use_graph = kwargs.pop('use_graph', 0)
+        self.use_sne = kwargs.pop('use_sne', 0)
         if not os.path.exists(self.model_path):
             os.makedirs(self.model_path)
         if not os.path.exists(self.log_path):
@@ -59,11 +59,13 @@ class ModelSolver(object):
         test_loader = self.test_data
         # build_model
         _, y_, loss = self.model.build_model()
+        sne_loss = self.model.t_sne()
         # train op
         with tf.name_scope('optimizer'):
             # ========== loss
             optimizer = self.optimizer(learning_rate=self.learning_rate)
             train_op = optimizer.minimize(loss, global_step=tf.train.get_global_step())
+            sne_train_op = optimizer.minimize(sne_loss, global_step=tf.train_get_global_step())
         tf.get_variable_scope().reuse_variables()
         # set upper limit of used gpu memory
         gpu_options = tf.GPUOptions(allow_growth=True)
@@ -75,20 +77,23 @@ class ModelSolver(object):
                 pretrained_model_path = self.model_path + self.pretrained_model
                 saver.restore(sess, pretrained_model_path)
             # ============== begin training ===================
+            if self.use_sne:
+                train_loader.get_distance_matrix()
             for e in xrange(self.n_epochs):
                 print '========== begin epoch %d ===========' % e
                 curr_loss = 0
+                sne_loss = 0
                 val_loss = 0
                 # '''
                 # ------------- train ----------------
                 num_train_points = len(train_loader.train_pids)
                 train_pid_batches = xrange(int(math.ceil(num_train_points * 1.0 / self.batch_size)))
                 #print 'num of train batches:    %d' % len(train_pid_batches)
-                widgets = ['Train: ', Percentage(), ' ', Bar('#'), ' ', ETA()]
+                widgets = ['Train: ', Percentage(), ' ', Bar('-'), ' ', ETA()]
                 pbar = ProgressBar(widgets=widgets, maxval=len(train_pid_batches)).start()
                 for i in train_pid_batches:
                     pbar.update(i)
-                    _, x_feature_id, x_feature_v, seq_l, y = train_loader.get_pid_x(train_loader.train_pids,
+                    _, x_feature_id, x_feature_v, y = train_loader.get_pid_x(train_loader.train_pids,
                                                                                     i*self.batch_size, (i+1)*self.batch_size)
                     x_feature_v = x_feature_v/np.linalg.norm(x_feature_v, 2, axis=-1, keepdims=True)
                     #x_feature_v += np.random.normal(0, 0.0001, x_feature_v.shape)
@@ -96,13 +101,28 @@ class ModelSolver(object):
                         continue
                     feed_dict = {self.model.x_feature_id: np.array(x_feature_id, dtype=np.int32),
                                  self.model.x_feature_v: np.array(x_feature_v, dtype=np.float32),
-                                 self.model.y: np.array(y, dtype=np.float32),
-                                 self.model.seqlen: np.array(seq_l, dtype=np.int32),
-                                 self.model.training: True
+                                 self.model.y: np.array(y, dtype=np.float32)
                                  }
                     _, l_ = sess.run([train_op, loss], feed_dict)
                     curr_loss += l_
                 pbar.finish()
+                # ---- sne regularization ----
+                if self.use_sne:
+                    num_sne_points = len(train_loader.index_pids)
+                    sne_pids = xrange(num_sne_points)
+                    widgets = ['Train: ', Percentage(), ' ', Bar('-'), ' ', ETA()]
+                    pbar = ProgressBar(widgets=widgets, maxval=num_sne_points).start()
+                    for i in sne_pids:
+                        pbar.update(i)
+                        p1_f_id, p1_f_v, p2_f_id, p2_f_v, p2_dis = train_loader.get_pid_pid_dis(i)
+                        feed_dict = {self.model.p1_f_id: p1_f_id,
+                                     self.model.p1_f_v: p1_f_v,
+                                     self.model.p2_f_id: p2_f_id,
+                                     self.model.p2_f_v: p2_f_v,
+                                     self.model.p1_p2_dis: p2_dis}
+                        _, sne_l_ = sess.run([sne_train_op, sne_loss], feed_dict)
+                        sne_loss += sne_l_
+                    pbar.finish()
                 # -------------- validate -------------
                 num_val_points = len(train_loader.val_pids)
                 val_pid_batches = xrange(int(math.ceil(num_val_points*1.0 / self.batch_size)))
@@ -115,14 +135,12 @@ class ModelSolver(object):
                 pbar = ProgressBar(widgets=widgets, maxval=len(val_pid_batches)).start()
                 for i in val_pid_batches:
                     pbar.update(i)
-                    batch_pid, x_feature_id, x_feature_v, seq_l, y = train_loader.get_pid_x(train_loader.val_pids,
+                    batch_pid, x_feature_id, x_feature_v, y = train_loader.get_pid_x(train_loader.val_pids,
                                                                                             i*self.batch_size, (i+1)*self.batch_size)
                     x_feature_v = x_feature_v / np.linalg.norm(x_feature_v, 2, axis=-1, keepdims=True)
                     feed_dict = {self.model.x_feature_id: np.array(x_feature_id, dtype=np.int32),
                                  self.model.x_feature_v: np.array(x_feature_v, dtype=np.float32),
-                                 self.model.y: np.array(y),
-                                 self.model.seqlen: np.array(seq_l),
-                                 self.model.training: True
+                                 self.model.y: np.array(y)
                                  }
                     y_p, l_ = sess.run([y_, loss], feed_dict)
                     val_loss += l_
@@ -142,6 +160,9 @@ class ModelSolver(object):
                 train_loader.reset_data()
                 # ====== output loss ======
                 w_text = 'at epoch %d, train loss is %f ' % (e, curr_loss/len(train_pid_batches))
+                print w_text
+                o_file.write(w_text)
+                w_text = 'at epoch %d, sne loss is %f ' % (e, sne_loss / num_sne_points)
                 print w_text
                 o_file.write(w_text)
                 w_text = 'at epoch %d, val loss is %f ' % (e, val_loss/len(val_pid_batches))
@@ -173,15 +194,13 @@ class ModelSolver(object):
                     pbar = ProgressBar(widgets=widgets, maxval=len(test_pid_batches)).start()
                     for i in test_pid_batches:
                         pbar.update(i)
-                        batch_pid, x_feature_id, x_feature_v, seq_l, y = test_loader.get_pid_x(test_loader.pids,
+                        batch_pid, x_feature_id, x_feature_v, y = test_loader.get_pid_x(test_loader.pids,
                                                                                                 i * self.batch_size, (
                                                                                                 i + 1) * self.batch_size)
                         x_feature_v = x_feature_v / np.linalg.norm(x_feature_v, 2, axis=-1, keepdims=True)
                         feed_dict = {self.model.x_feature_id: np.array(x_feature_id, dtype=np.int32),
                                      self.model.x_feature_v: np.array(x_feature_v, dtype=np.float32),
-                                     self.model.y: np.array(y),
-                                     self.model.seqlen: np.array(seq_l),
-                                     self.model.training: True
+                                     self.model.y: np.array(y)
                                      }
                         y_p, l_ = sess.run([y_, loss], feed_dict)
                         test_loss += l_
