@@ -153,6 +153,7 @@ class DataLoader_all():
             #         self.pid_pid_dis.append((self.index_pids[pid_i], self.index_pids[pid_j], dis_i_j))
             #         self.pid_pid_dis.append((self.index_pids[pid_j], self.index_pids[pid_i], dis_i_j))
         print 'done'
+        self.pid_dis_keys = self.pid_dis.keys()
         # np.random.shuffle(self.pid_pid_dis)
 
     def get_pid_pid_dis(self, pid):

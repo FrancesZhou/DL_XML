@@ -108,7 +108,8 @@ class ModelSolver(object):
                 pbar.finish()
                 # ---- sne regularization ----
                 if self.use_sne:
-                    sne_pids = train_loader.pid_dis.keys()
+                    sne_pids = train_loader.pid_dis_keys
+                    np.random.shuffle(sne_pids)
                     num_sne_points = len(sne_pids)
                     sne_pids_batch = xrange(num_sne_points)
                     widgets = ['Train: ', Percentage(), ' ', Bar('-'), ' ', ETA()]
