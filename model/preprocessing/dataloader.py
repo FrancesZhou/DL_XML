@@ -162,7 +162,7 @@ class DataLoader_all():
         p2_id, p2_dis = zip(*(self.pid_dis[pid].items()))
         p2_f_id = [self.x_feature_indices[p_] for p_ in p2_id]
         p2_f_v = [self.x_feature_values[p_] for p_ in p2_id]
-        return np.array(p1_f_id, np.int32), np.array(p1_f_v, np.int32), \
+        return np.array(p1_f_id, np.int32), np.array(p1_f_v, np.float32), \
                np.array(p2_f_id, np.int32), np.array(p2_f_v, np.float32), \
                np.array(p2_dis, np.float32)
 

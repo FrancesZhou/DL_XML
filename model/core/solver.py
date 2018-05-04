@@ -82,7 +82,7 @@ class ModelSolver(object):
             for e in xrange(self.n_epochs):
                 print '========== begin epoch %d ===========' % e
                 curr_loss = 0
-                sne_loss = 0
+                curr_sne_loss = 0
                 val_loss = 0
                 # '''
                 # ------------- train ----------------
@@ -116,13 +116,14 @@ class ModelSolver(object):
                     for i in sne_pids_batch:
                         pbar.update(i)
                         p1_f_id, p1_f_v, p2_f_id, p2_f_v, p2_dis = train_loader.get_pid_pid_dis(sne_pids[i])
-                        feed_dict = {self.model.p1_f_id: p1_f_id,
+                        #print p1_f_id
+                        feed_dict = {self.model.p1_f_id: np.array(p1_f_id, dtype=np.int32),
                                      self.model.p1_f_v: p1_f_v,
                                      self.model.p2_f_id: p2_f_id,
                                      self.model.p2_f_v: p2_f_v,
                                      self.model.p1_p2_dis: p2_dis}
                         _, sne_l_ = sess.run([sne_train_op, sne_loss], feed_dict)
-                        sne_loss += sne_l_
+                        curr_sne_loss += sne_l_
                     pbar.finish()
                 # -------------- validate -------------
                 num_val_points = len(train_loader.val_pids)
@@ -163,7 +164,7 @@ class ModelSolver(object):
                 w_text = 'at epoch %d, train loss is %f ' % (e, curr_loss/len(train_pid_batches))
                 print w_text
                 o_file.write(w_text)
-                w_text = 'at epoch %d, sne loss is %f ' % (e, sne_loss / num_sne_points)
+                w_text = 'at epoch %d, sne loss is %f ' % (e, curr_sne_loss / num_sne_points)
                 print w_text
                 o_file.write(w_text)
                 w_text = 'at epoch %d, val loss is %f ' % (e, val_loss/len(val_pid_batches))
