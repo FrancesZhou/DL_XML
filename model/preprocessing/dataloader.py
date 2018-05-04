@@ -24,7 +24,7 @@ class DataLoader_all():
         self.x_feature_indices = {}
         self.x_feature_values = {}
         self.label_data = label_data
-        self.label_prop = label_prop
+        self.label_prop = np.array(label_prop, dtype=np.float32)
         self.pids = []
         self.num_labels = num_labels
         self.batch_size = batch_size
@@ -39,9 +39,9 @@ class DataLoader_all():
         print 'num of y: ' + str(len(self.label_data))
         print 'max sequence length: ' + str(self.max_seq_len)
         # label
-        zero_prop_label = set(range(self.num_labels)) - set(self.label_prop.keys())
-        for zero_l in zero_prop_label:
-            self.label_prop[zero_l] = 0
+        #zero_prop_label = set(range(self.num_labels)) - set(self.label_prop.keys())
+        #for zero_l in zero_prop_label:
+        #    self.label_prop[zero_l] = 0
         #
         self.pids = np.asarray(self.label_data.keys())
         for pid in self.pids:
@@ -93,7 +93,7 @@ class DataLoader_all():
         dis_matrix = csc_matrix((pid_num, pid_num), dtype=np.float32)
         self.pid_dis = {}
         # self.pid_pid_dis = []
-        label_sort = np.argsort(-self.label_prop)[:int(self.num_labels*self.ac_lbl_ratio)]
+        label_sort = np.argsort(-np.array(self.label_prop))[:int(self.num_labels*self.ac_lbl_ratio)]
         #
         self.prop_dis = np.sum(self.label_prop)
         sigma = 1

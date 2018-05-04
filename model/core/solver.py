@@ -65,7 +65,7 @@ class ModelSolver(object):
             # ========== loss
             optimizer = self.optimizer(learning_rate=self.learning_rate)
             train_op = optimizer.minimize(loss, global_step=tf.train.get_global_step())
-            sne_train_op = optimizer.minimize(sne_loss, global_step=tf.train_get_global_step())
+            sne_train_op = optimizer.minimize(sne_loss, global_step=tf.train.get_global_step())
         tf.get_variable_scope().reuse_variables()
         # set upper limit of used gpu memory
         gpu_options = tf.GPUOptions(allow_growth=True)
