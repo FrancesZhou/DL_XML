@@ -100,9 +100,8 @@ class NN(object):
             # ) + self.lamb*tf.nn.l2_loss(weight_1) + self.lamb*tf.nn.l2_loss(weight_2)
             #loss = -tf.reduce_sum(tf.multiply(tf.add(tf.multiply(y, tf.log(y_out)), tf.multiply(1-y, tf.log(1-y_out))), tf.expand_dims(self.label_prop, 0)))
         else:
-            #loss = tf.reduce_sum(tf.nn.sigmoid_cross_entropy_with_logits(labels=y, logits=y_out))
-            loss = -tf.reduce_sum(tf.add(tf.multiply(y, tf.log(y_out)),
-                                         tf.multiply(1 - y, tf.log(1 - y_out))))
+            loss = tf.reduce_sum(tf.nn.sigmoid_cross_entropy_with_logits(labels=y, logits=y_out))
+            #loss = -tf.reduce_sum(tf.add(tf.multiply(y, tf.log(y_out)), tf.multiply(1 - y, tf.log(1 - y_out))))
         return x_emb, tf.sigmoid(y_out), loss
 
 
