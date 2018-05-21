@@ -79,8 +79,8 @@ def get_train_test_data(args, A, B):
         train_feature_str[i] = feature_str
         # word
         word_tfidf = {}
-        for str in feature_str.split(' '):
-            word, tfidf = str.split(':')
+        for s_ in feature_str.split(' '):
+            word, tfidf = s_.split(':')
             word_tfidf[int(word)] = float(tfidf)
         train_doc_wordID[i] = word_tfidf
     # test
@@ -103,13 +103,13 @@ def get_train_test_data(args, A, B):
         #test_label_feature_str[i] = line
         # word
         word_tfidf = {}
-        for str in feature_str.split(' '):
-            word, tfidf = str.split(':')
+        for s_ in feature_str.split(' '):
+            word, tfidf = s_.split(':')
             word_tfidf[int(word)] = float(tfidf)
         test_doc_wordID[i] = word_tfidf
 
     if args.valid_labels:
-        all_labels = np.unique(np.concatenate(all_labels)).sort()
+        all_labels = sorted(np.unique(np.concatenate(all_labels)))
         label_num = len(all_labels)
         print 'number of valid labels: {0}'.format(label_num)
         label_dict = dict(zip(all_labels, np.arange(label_num)))

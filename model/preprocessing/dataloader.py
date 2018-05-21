@@ -27,7 +27,8 @@ class DataLoader_all():
         self.label_prop = np.array(label_prop, dtype=np.float32)
         self.pids = []
         self.label_dict = label_dict
-        self.num_labels = len(label_dict)
+        #print label_dict
+        self.num_labels = len(self.label_dict.keys())
         self.batch_size = batch_size
         self.max_seq_len = max_seq_len
         self.ac_lbl_ratio = ac_lbl_ratio

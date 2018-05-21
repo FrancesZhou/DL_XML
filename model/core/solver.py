@@ -152,10 +152,10 @@ class ModelSolver(object):
                         pid = batch_pid[p_i]
                         pre_label_index = np.argsort(-np.array(y_p[p_i]))[:5]
                         pre_pid_label_prop[pid] = [y[p_i][ind]*(train_loader.label_prop[ind]) for ind in pre_label_index]
-                        tar_pid_label_prop[pid] = [train_loader.label_prop[q] for q in train_loader.label_data[pid]]
+                        tar_pid_label_prop[pid] = [train_loader.label_prop[train_loader.label_dict[q]] for q in train_loader.label_data[pid]]
                         #
                         pre_pid_label[pid] = [y[p_i][ind] for ind in pre_label_index]
-                        tar_pid_label[pid] = np.ones_like(train_loader.label_data[pid])
+                        tar_pid_label[pid] = np.ones_like([train_loader.label_dict[q] for q in train_loader.label_data[pid]])
                 pbar.finish()
                 val_results = results_for_prop_vector(tar_pid_label, pre_pid_label)
                 val_prop_results = results_for_prop_vector(tar_pid_label_prop, pre_pid_label_prop)
@@ -213,10 +213,10 @@ class ModelSolver(object):
                             pre_label_index = np.argsort(-np.array(y_p[p_i]))[:5]
                             pre_pid_label_prop[pid] = [y[p_i][ind] * (test_loader.label_prop[ind]) for ind in
                                                        pre_label_index]
-                            tar_pid_label_prop[pid] = [test_loader.label_prop[q] for q in test_loader.label_data[pid]]
+                            tar_pid_label_prop[pid] = [test_loader.label_prop[test_loader.label_dict[q]] for q in test_loader.label_data[pid]]
                             #
                             pre_pid_label[pid] = [y[p_i][ind] for ind in pre_label_index]
-                            tar_pid_label[pid] = np.ones_like(test_loader.label_data[pid])
+                            tar_pid_label[pid] = np.ones_like([test_loader.label_dict[q] for q in test_loader.label_data[pid]])
                     pbar.finish()
                     test_results = results_for_prop_vector(tar_pid_label, pre_pid_label)
                     test_prop_results = results_for_prop_vector(tar_pid_label_prop, pre_pid_label_prop)

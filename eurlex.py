@@ -67,7 +67,7 @@ def main():
     #label_prop_dict = load_pickle(args.folder_path + 'inv_prop_dict.pkl')
     label_prop = load_pickle(args.folder_path + 'inv_prop.pkl')
     label_dict = load_pickle(args.folder_path + 'label_dict.pkl')
-    all_labels = load_pickle(args.folder_path + 'index_labels.pkl')
+    all_labels = load_pickle(args.folder_path + 'index_label.pkl')
     num_labels = len(all_labels)
     print 'real number of labels: ' + str(num_labels)
     print 'maximum label: ' + str(np.max(all_labels))
@@ -81,7 +81,7 @@ def main():
     print '============== create train/test data loader ...'
     train_loader = DataLoader_all(train_doc, train_label, label_dict, label_prop,
                                   batch_size=args.batch_size, max_seq_len=args.max_seq_len, ac_lbl_ratio=args.ac_lbl_ratio)
-    test_loader = DataLoader_all(test_doc, test_label, num_labels, label_prop,
+    test_loader = DataLoader_all(test_doc, test_label, label_dict, label_prop,
                                  batch_size=args.batch_size, max_seq_len=args.max_seq_len)
     print '============== build model ...'
     print 'build NN model ...'
