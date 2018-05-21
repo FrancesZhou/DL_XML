@@ -55,6 +55,8 @@ class NN(object):
         self.p1_p2_dis = tf.placeholder_with_default(tf.constant(0, dtype=tf.float32, shape=[1]), [None])
         #self.training = tf.placeholder(tf.bool, shape=())
 
+    #def hidden_competitive_layer(self):
+
     def competitive_layer(self, y_out, topk=10, factor=0.1):
         x = y_out
         # size: [batch_size, label_output_dim]
