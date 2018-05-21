@@ -29,12 +29,20 @@ class NN(object):
         self.const_initializer = tf.constant_initializer()
         self.neg_inf = tf.constant(value=-np.inf, name='numpy_neg_inf')
         #
-        self.word_embedding = tf.get_variable('word_embedding', [vocab_size, word_embedding_dim], initializer=self.weight_initializer)
-        self.weight_1 = tf.get_variable('weight_1', [self.word_embedding_dim, self.num_classify_hidden],
-                                   initializer=self.weight_initializer)
-        self.bias_1 = tf.get_variable('bias_1', [self.num_classify_hidden], initializer=self.const_initializer)
-        self.weight_2 = tf.get_variable('weight_2', [self.num_classify_hidden, self.label_output_dim],
-                                   initializer=self.weight_initializer)
+        with tf.name_scope('word_embedding'):
+            self.word_embedding = tf.get_variable('word_embedding', [vocab_size, word_embedding_dim], initializer=self.weight_initializer)
+            self.variable_summaries(self.word_embedding)
+        with tf.name_scope('weight_1'):
+            self.weight_1 = tf.get_variable('weight_1', [self.word_embedding_dim, self.num_classify_hidden],
+                                            initializer=self.weight_initializer)
+            self.variable_summaries(self.weight_1)
+        with tf.name_scope('bias_1'):
+            self.bias_1 = tf.get_variable('bias_1', [self.num_classify_hidden], initializer=self.const_initializer)
+            self.variable_summaries(self.bias_1)
+        with tf.name_scope('weight_2'):
+            self.weight_2 = tf.get_variable('weight_2', [self.num_classify_hidden, self.label_output_dim],
+                                            initializer=self.weight_initializer)
+            self.variable_summaries(self.weight_2)
         #
         self.x_feature_id = tf.placeholder_with_default(tf.constant(0, dtype=tf.int32, shape=[1, self.max_seq_len]),
                                                         [None, self.max_seq_len])
@@ -56,6 +64,18 @@ class NN(object):
         #self.training = tf.placeholder(tf.bool, shape=())
 
     #def hidden_competitive_layer(self):
+
+    def variable_summaries(self, var):
+        """Attach a lot of summaries to a Tensor (for TensorBoard visualization)."""
+        with tf.name_scope('summaries'):
+            mean = tf.reduce_mean(var)
+            tf.summary.scalar('mean', mean)
+            with tf.name_scope('stddev'):
+                stddev = tf.sqrt(tf.reduce_mean(tf.square(var - mean)))
+            tf.summary.scalar('stddev', stddev)
+            tf.summary.scalar('max', tf.reduce_max(var))
+            tf.summary.scalar('min', tf.reduce_min(var))
+            tf.summary.histogram('histogram', var)
 
     def competitive_layer(self, y_out, topk=10, factor=0.1):
         x = y_out
@@ -95,18 +115,22 @@ class NN(object):
             #feature_v = tf.layers.dropout(feature_v, rate=self.dropout_keep_prob, training=self.training)
             x_emb = tf.reduce_sum(tf.multiply(x, tf.expand_dims(feature_v, -1)), axis=1)
             # x_emb: [batch_size, word_embedding_dim]
+            tf.summary.histogram('x_emb', x_emb)
         with tf.name_scope('output'):
             y_hidden = tf.nn.relu(tf.add(tf.matmul(x_emb, self.weight_1), self.bias_1))
+            tf.summary.histogram('y_hidden', y_hidden)
             # BN and dropout
             #y_hidden = tf.layers.batch_normalization(y_hidden, training=self.training)
             #y_hidden = tf.layers.dropout(y_hidden, rate=self.dropout_keep_prob, training=self.training)
             #
             #y_out = tf.nn.relu(tf.matmul(y_hidden, weight_2))
             y_out = tf.matmul(y_hidden, self.weight_2)
+            tf.summary.histogram('y_out', y_out)
             # y_out: [batch_size, label_output_dim]
             # competitive layer
             if self.use_comp:
                 y_out = self.competitive_layer(y_out)
+                tf.summary.histogram('comp_out', y_out)
                 # eps = tf.constant(value=np.finfo(float).eps, dtype=tf.float32, name='numpy_eps')
                 # y_out = tf.where(tf.greater(y_out, 0), tf.sigmoid(y_out), tf.ones_like(y_out)*eps)
         with tf.name_scope('loss'):
@@ -118,6 +142,7 @@ class NN(object):
             else:
                 loss = tf.reduce_sum(tf.nn.sigmoid_cross_entropy_with_logits(labels=y, logits=y_out))
                 #loss = -tf.reduce_sum(tf.add(tf.multiply(y, tf.log(y_out)), tf.multiply(1 - y, tf.log(1 - y_out))))
+        tf.summary.scalar('loss', loss)
         return x_emb, tf.sigmoid(y_out), loss
 
     def t_sne(self):
@@ -136,8 +161,10 @@ class NN(object):
         with tf.name_scope('distance'):
             dis = tf.reciprocal(tf.norm(x_1_emb - x_2_emb, axis=1) + 1)
             dis = tf.divide(dis, tf.reduce_sum(dis))
+            tf.summary.histogram('dis', dis)
         with tf.name_scope('loss'):
             loss = tf.reduce_sum(tf.multiply(self.p1_p2_dis, tf.log(self.p1_p2_dis/dis)))
+            tf.summary.scalar('t_sne_loss', loss)
         return loss
 
 

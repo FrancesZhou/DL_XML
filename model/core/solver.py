@@ -45,6 +45,10 @@ class ModelSolver(object):
             os.makedirs(self.model_path)
         if not os.path.exists(self.log_path):
             os.makedirs(self.log_path)
+        if not os.path.exists(self.log_path + '/train'):
+            os.makedirs(self.log_path + '/train')
+        if not os.path.exists(self.log_path + '/test'):
+            os.makedirs(self.log_path + '/test')
         if self.update_rule == 'adam':
             self.optimizer = tf.train.AdamOptimizer
         elif self.update_rule == 'momentum':
@@ -66,10 +70,15 @@ class ModelSolver(object):
             optimizer = self.optimizer(learning_rate=self.learning_rate)
             train_op = optimizer.minimize(loss, global_step=tf.train.get_global_step())
             sne_train_op = optimizer.minimize(sne_loss, global_step=tf.train.get_global_step())
+        # summay
+        merged = tf.summary.merge_all()
         tf.get_variable_scope().reuse_variables()
+        #
         # set upper limit of used gpu memory
         gpu_options = tf.GPUOptions(allow_growth=True)
         with tf.Session(config=tf.ConfigProto(gpu_options=gpu_options)) as sess:
+            train_writer = tf.summary.FileWriter(self.log_path + '/train', sess.graph)
+            test_writer = tf.summary.FileWriter(self.log_path + '/test')
             tf.global_variables_initializer().run()
             saver = tf.train.Saver(tf.global_variables())
             if self.pretrained_model is not None:
@@ -104,6 +113,9 @@ class ModelSolver(object):
                                  self.model.y: np.array(y, dtype=np.float32)
                                  }
                     _, l_ = sess.run([train_op, loss], feed_dict)
+                    if i == len(train_pid_batches)-1:
+                        train_summary = sess.run(merged, feed_dict)
+                        train_writer.add_summary(train_summary, (e-1)*2)
                     curr_loss += l_
                 pbar.finish()
                 # ---- sne regularization ----
@@ -125,6 +137,9 @@ class ModelSolver(object):
                                      self.model.p1_p2_dis: p2_dis}
                         _, sne_l_ = sess.run([sne_train_op, sne_loss], feed_dict)
                         curr_sne_loss += sne_l_
+                        if i == len(sne_pids_batch)-1:
+                            train_summary = sess.run(merged, feed_dict)
+                            train_writer.add_summary(train_summary, (e-1)*2 + 1)
                     pbar.finish()
                 # -------------- validate -------------
                 num_val_points = len(train_loader.val_pids)
@@ -185,7 +200,7 @@ class ModelSolver(object):
                 print 'model-%s saved.' % (e+1)
                 # '''
                 # ----------------- test ---------------------
-                if e % 2 == 0:
+                if e % 1 == 0:
                     print '=============== test ================'
                     test_loss = 0
                     num_test_points = len(test_loader.pids)
@@ -206,6 +221,8 @@ class ModelSolver(object):
                                      self.model.y: np.array(y)
                                      }
                         y_p, l_ = sess.run([y_, loss], feed_dict)
+                        test_summary = sess.run(merged, feed_dict)
+                        test_writer.add_summary(test_summary, i)
                         test_loss += l_
                         # prediction
                         for p_i in xrange(len(batch_pid)):

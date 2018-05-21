@@ -33,13 +33,13 @@ def main():
     parse.add_argument('-pretrained_model', '--pretrained_model_path', type=str, default=None, help='path to the pretrained model')
     parse.add_argument('-dropout_keep_prob', '--dropout_keep_prob', type=float,
                        default=0.5, help='keep probability in dropout layer')
-    parse.add_argument('-use_sne', '--use_sne', type=int, default=0,
+    parse.add_argument('-use_sne', '--use_sne', type=int, default=1,
                        help='whether to use sne regularization')
     parse.add_argument('-ac_lbl_ratio', '--ac_lbl_ratio', type=float, default=0.5,
                        help='ratio of active labels in sne regularization')
     parse.add_argument('-use_propensity', '--use_propensity', type=int, default=1,
                        help='whether to use propensity loss')
-    parse.add_argument('-use_comp', '--use_comp', type=int, default=1,
+    parse.add_argument('-use_comp', '--use_comp', type=int, default=0,
                        help='whether to add competitive layer')
     parse.add_argument('-topk', '--topk', type=int, default=10,
                        help='top k neurons in competitive layer')
@@ -50,7 +50,7 @@ def main():
     # ---------- training parameters --------
     parse.add_argument('-n_epochs', '--n_epochs', type=int, default=10, help='number of epochs')
     parse.add_argument('-batch_size', '--batch_size', type=int, default=32, help='batch size for training')
-    parse.add_argument('-lr', '--learning_rate', type=float, default=0.0001, help='learning rate')
+    parse.add_argument('-lr', '--learning_rate', type=float, default=0.002, help='learning rate')
     parse.add_argument('-update_rule', '--update_rule', type=str, default='adam', help='update rule')
     # ------ train or predict -------
     parse.add_argument('-train', '--train', type=int, default=1, help='if training')
