@@ -16,7 +16,7 @@ from ..utils.op_utils import *
 
 class DataLoader_all():
     def __init__(self, doc_wordID_data, label_data,
-                 num_labels, label_prop,
+                 label_dict, label_prop,
                  batch_size,
                  max_seq_len=5000,
                  ac_lbl_ratio=0.5):
@@ -26,7 +26,8 @@ class DataLoader_all():
         self.label_data = label_data
         self.label_prop = np.array(label_prop, dtype=np.float32)
         self.pids = []
-        self.num_labels = num_labels
+        self.label_dict = label_dict
+        self.num_labels = len(label_dict)
         self.batch_size = batch_size
         self.max_seq_len = max_seq_len
         self.ac_lbl_ratio = ac_lbl_ratio
@@ -39,10 +40,6 @@ class DataLoader_all():
         print 'num of y: ' + str(len(self.label_data))
         print 'max sequence length: ' + str(self.max_seq_len)
         # label
-        #zero_prop_label = set(range(self.num_labels)) - set(self.label_prop.keys())
-        #for zero_l in zero_prop_label:
-        #    self.label_prop[zero_l] = 0
-        #
         self.pids = np.asarray(self.label_data.keys())
         for pid in self.pids:
             temp = sorted(self.doc_wordID_data[pid].items(), key=lambda e: e[1], reverse=True)
@@ -54,6 +51,8 @@ class DataLoader_all():
             self.x_feature_indices[pid] = feature_indices
             self.x_feature_values[pid] = np.array(list(feature_v) + (self.max_seq_len - seq_len) * [0])
             self.doc_length[pid] = seq_len
+            #
+            # labels
 
     def get_pid_x(self, pool, i, j):
         batch_y = []
@@ -65,7 +64,7 @@ class DataLoader_all():
         for pid in batch_pid:
             y = np.zeros(self.num_labels)
             for l in self.label_data[pid]:
-                y[l] = 1
+                y[self.label_dict[l]] = 1
             batch_y.append(y)
         # if end < j:
         #     batch_x = np.concatenate((batch_x, np.zeros((j-end, self.max_seq_len), dtype=int)), axis=0)
@@ -86,7 +85,9 @@ class DataLoader_all():
         pid_num = len(self.index_pids)
         row_ind = [[k]*len(self.label_data[self.index_pids[k]]) for k in range(pid_num)]
         row_ind = np.concatenate(row_ind)
-        col_ind = [self.label_data[p_] for p_ in self.index_pids]
+        col_ind = []
+        for p_ in self.index_pids:
+            col_ind.append([self.label_dict[l_] for l_ in self.label_data[p_]])
         col_ind = np.concatenate(col_ind)
         data = np.ones_like(row_ind)
         pid_label_matrix = csc_matrix((data, (row_ind, col_ind)), shape=(pid_num, self.num_labels))
@@ -108,8 +109,9 @@ class DataLoader_all():
                     pid_j = ac_pid_index[j]
                     #print pid_i
                     #print pid_j
-                    dis_i_j = self.distance_i_j(self.label_data[self.index_pids[pid_i]],
-                                                self.label_data[self.index_pids[pid_j]])
+                    v_i = [self.label_dict[l_] for l_ in self.label_data[self.index_pids[pid_i]]]
+                    v_j = [self.label_dict[l_] for l_ in self.label_data[self.index_pids[pid_j]]]
+                    dis_i_j = self.distance_i_j(v_i, v_j)
                     dis_matrix[pid_i, pid_j] = np.exp(-dis_i_j*dis_i_j/(2*sigma*sigma))
                     dis_matrix[pid_j, pid_i] = dis_matrix[pid_i, pid_j]
         print 'done'
@@ -133,25 +135,6 @@ class DataLoader_all():
             except KeyError:
                 self.pid_dis[self.index_pids[nz_col]] = {}
                 self.pid_dis[self.index_pids[nz_col]][self.index_pids[nz_row]] = p_i_j
-            # for i in range(len(ac_pid_index)):
-            #     for j in range(i+1, len(ac_pid_index)):
-            #         pid_i = ac_pid_index[i]
-            #         pid_j = ac_pid_index[j]
-            #         dis_i_j = self.distance_i_j(self.label_data[self.index_pids[pid_i]],
-            #                                   self.label_data[self.index_pids[pid_j]])
-            #         try:
-            #             self.pid_dis[self.index_pids[pid_i]][self.index_pids[pid_j]] = dis_i_j
-            #         except KeyError:
-            #             self.pid_dis[self.index_pids[pid_i]] = {}
-            #             self.pid_dis[self.index_pids[pid_i]][self.index_pids[pid_j]] = dis_i_j
-            #         try:
-            #             self.pid_dis[self.index_pids[pid_j]][self.index_pids[pid_i]] = dis_i_j
-            #         except KeyError:
-            #             self.pid_dis[self.index_pids[pid_j]] = {}
-            #             self.pid_dis[self.index_pids[pid_j]][self.index_pids[pid_i]] = dis_i_j
-            #         #
-            #         self.pid_pid_dis.append((self.index_pids[pid_i], self.index_pids[pid_j], dis_i_j))
-            #         self.pid_pid_dis.append((self.index_pids[pid_j], self.index_pids[pid_i], dis_i_j))
         print 'done'
         self.pid_dis_keys = self.pid_dis.keys()
         # np.random.shuffle(self.pid_pid_dis)

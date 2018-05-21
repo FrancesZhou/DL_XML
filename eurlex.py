@@ -21,6 +21,8 @@ def main():
     # ---------- environment setting: which gpu -------
     parse.add_argument('-gpu', '--gpu', type=str, default='0', help='which gpu to use: 0 or 1')
     # ---------- foler path of train/test data -------
+    parse.add_argument('-valid_labels', '--valid_labels', type=bool,
+                       default=True, help='-if remove invalid labels')
     parse.add_argument('-folder', '--folder_path', type=str,
                        default='datasets/eurlex/trn_tst_data/',
                        help='path to train/test data')
@@ -58,11 +60,16 @@ def main():
 
     os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
     print '-------------- load labels ------------------------'
-    label_prop_dict = load_pickle(args.folder_path + 'inv_prop_dict.pkl')
+    if args.valid_labels:
+        args.folder_path = args.folder_path + 'valid_label_data/'
+    else:
+        args.folder_path = args.folder_path + 'all_label_data/'
+    #label_prop_dict = load_pickle(args.folder_path + 'inv_prop_dict.pkl')
     label_prop = load_pickle(args.folder_path + 'inv_prop.pkl')
-    all_labels = label_prop_dict.keys()
-    num_labels = np.max(all_labels) + 1
-    print 'real number of labels: ' + str(len(all_labels))
+    label_dict = load_pickle(args.folder_path + 'label_dict.pkl')
+    all_labels = load_pickle(args.folder_path + 'index_labels.pkl')
+    num_labels = len(all_labels)
+    print 'real number of labels: ' + str(num_labels)
     print 'maximum label: ' + str(np.max(all_labels))
     print 'minimum label: ' + str(np.min(all_labels))
     print 'number of labels: ' + str(num_labels)
@@ -72,7 +79,7 @@ def main():
     train_label = load_pickle(args.folder_path + 'train_label.pkl')
     test_label = load_pickle(args.folder_path + 'test_label.pkl')
     print '============== create train/test data loader ...'
-    train_loader = DataLoader_all(train_doc, train_label, num_labels, label_prop,
+    train_loader = DataLoader_all(train_doc, train_label, label_dict, label_prop,
                                   batch_size=args.batch_size, max_seq_len=args.max_seq_len, ac_lbl_ratio=args.ac_lbl_ratio)
     test_loader = DataLoader_all(test_doc, test_label, num_labels, label_prop,
                                  batch_size=args.batch_size, max_seq_len=args.max_seq_len)
