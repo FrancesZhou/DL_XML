@@ -162,7 +162,7 @@ class NN(object):
             dis = tf.reciprocal(tf.norm(x_1_emb - x_2_emb, axis=1) + 1)
             dis = tf.divide(dis, tf.reduce_sum(dis))
             tf.summary.histogram('dis', dis)
-        with tf.name_scope('loss'):
+        with tf.name_scope('t_sne_loss'):
             loss = tf.reduce_sum(tf.multiply(self.p1_p2_dis, tf.log(self.p1_p2_dis/dis)))
             tf.summary.scalar('t_sne_loss', loss)
         return loss

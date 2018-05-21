@@ -115,7 +115,7 @@ class ModelSolver(object):
                     _, l_ = sess.run([train_op, loss], feed_dict)
                     if i == len(train_pid_batches)-1:
                         train_summary = sess.run(merged, feed_dict)
-                        train_writer.add_summary(train_summary, (e-1)*2)
+                        train_writer.add_summary(train_summary, e*2)
                     curr_loss += l_
                 pbar.finish()
                 # ---- sne regularization ----
@@ -124,7 +124,7 @@ class ModelSolver(object):
                     np.random.shuffle(sne_pids)
                     num_sne_points = len(sne_pids)
                     sne_pids_batch = xrange(num_sne_points)
-                    widgets = ['Train: ', Percentage(), ' ', Bar('-'), ' ', ETA()]
+                    widgets = ['Train_sne: ', Percentage(), ' ', Bar('-'), ' ', ETA()]
                     pbar = ProgressBar(widgets=widgets, maxval=num_sne_points).start()
                     for i in sne_pids_batch:
                         pbar.update(i)
@@ -139,7 +139,7 @@ class ModelSolver(object):
                         curr_sne_loss += sne_l_
                         if i == len(sne_pids_batch)-1:
                             train_summary = sess.run(merged, feed_dict)
-                            train_writer.add_summary(train_summary, (e-1)*2 + 1)
+                            train_writer.add_summary(train_summary, e*2 + 1)
                     pbar.finish()
                 # -------------- validate -------------
                 num_val_points = len(train_loader.val_pids)
@@ -149,7 +149,7 @@ class ModelSolver(object):
                 tar_pid_label_prop = {}
                 pre_pid_label = {}
                 tar_pid_label = {}
-                widgets = ['Validate: ', Percentage(), ' ', Bar('#'), ' ', ETA()]
+                widgets = ['Validate: ', Percentage(), ' ', Bar('-'), ' ', ETA()]
                 pbar = ProgressBar(widgets=widgets, maxval=len(val_pid_batches)).start()
                 for i in val_pid_batches:
                     pbar.update(i)
@@ -208,7 +208,7 @@ class ModelSolver(object):
                     #print 'num of test pid batches: %d' % len(test_pid_batches)
                     pre_pid_label_prop = {}
                     tar_pid_label_prop = {}
-                    widgets = ['Validate: ', Percentage(), ' ', Bar('#'), ' ', ETA()]
+                    widgets = ['Test: ', Percentage(), ' ', Bar('#'), ' ', ETA()]
                     pbar = ProgressBar(widgets=widgets, maxval=len(test_pid_batches)).start()
                     for i in test_pid_batches:
                         pbar.update(i)
