@@ -249,6 +249,8 @@ class ModelSolver(object):
                     print w_text
                     o_file.write(w_text)
             # save model
+            train_writer.close()
+            test_writer.close()
             save_name = self.model_path + 'model_final'
             saver.save(sess, save_name)
             print 'final model saved.'
