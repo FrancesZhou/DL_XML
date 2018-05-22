@@ -115,7 +115,7 @@ class ModelSolver(object):
                     _, l_ = sess.run([train_op, loss], feed_dict)
                     if i == len(train_pid_batches)-1:
                         train_summary = sess.run(merged, feed_dict)
-                        train_writer.add_summary(train_summary, e*2)
+                        train_writer.add_summary(train_summary, e)
                     curr_loss += l_
                 pbar.finish()
                 # ---- sne regularization ----
@@ -137,9 +137,9 @@ class ModelSolver(object):
                                      self.model.p1_p2_dis: p2_dis}
                         _, sne_l_ = sess.run([sne_train_op, sne_loss], feed_dict)
                         curr_sne_loss += sne_l_
-                        if i == len(sne_pids_batch)-1:
-                            train_summary = sess.run(merged, feed_dict)
-                            train_writer.add_summary(train_summary, e*2 + 1)
+                        # if i == len(sne_pids_batch)-1:
+                        #     train_summary = sess.run(merged, feed_dict)
+                        #     train_writer.add_summary(train_summary, e*2 + 1)
                     pbar.finish()
                 # -------------- validate -------------
                 num_val_points = len(train_loader.val_pids)
