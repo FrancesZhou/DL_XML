@@ -11,6 +11,7 @@ import math
 import random
 from sklearn.model_selection import train_test_split
 from scipy.sparse import csc_matrix
+from scipy.sparse import lil_matrix
 #from scipy.sparse import csr_matrix
 from ..utils.op_utils import *
 
@@ -92,7 +93,8 @@ class DataLoader_all():
         col_ind = np.concatenate(col_ind)
         data = np.ones_like(row_ind)
         pid_label_matrix = csc_matrix((data, (row_ind, col_ind)), shape=(pid_num, self.num_labels))
-        dis_matrix = csc_matrix((pid_num, pid_num), dtype=np.float32)
+        #dis_matrix = csc_matrix((pid_num, pid_num), dtype=np.float32)
+        dis_matrix = lil_matrix((pid_num, pid_num), dtype=np.float32)
         self.pid_dis = {}
         # self.pid_pid_dis = []
         label_sort = np.argsort(-self.label_prop)[:int(self.num_labels*self.ac_lbl_ratio)]
@@ -117,6 +119,7 @@ class DataLoader_all():
                     dis_matrix[pid_j, pid_i] = dis_matrix[pid_i, pid_j]
         print 'done'
         print 'calculate probability'
+        dis_matrix = dis_matrix.tocsc()
         for nz_index in set(dis_matrix.nonzero()[1]):
             dis_matrix[:, nz_index] = dis_matrix[:, nz_index]/np.sum(dis_matrix[:, nz_index])
         print 'done'
