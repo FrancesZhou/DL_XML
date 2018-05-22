@@ -29,6 +29,8 @@ class NN(object):
         self.const_initializer = tf.constant_initializer()
         self.neg_inf = tf.constant(value=-np.inf, name='numpy_neg_inf')
         #
+        self.num_classify_hidden = vocab_size
+        #
         with tf.name_scope('word_embedding'):
             self.word_embedding = tf.get_variable('word_embedding', [vocab_size, word_embedding_dim], initializer=self.weight_initializer)
             self.variable_summaries(self.word_embedding)
@@ -125,7 +127,8 @@ class NN(object):
             #y_hidden = tf.layers.dropout(y_hidden, rate=self.dropout_keep_prob, training=self.training)
             #
             #y_out = tf.nn.relu(tf.matmul(y_hidden, weight_2))
-            y_out_hidden = tf.matmul(y_hidden, self.weight_2)
+            y_out_hidden = y_hidden
+            #y_out_hidden = tf.matmul(y_hidden, self.weight_2)
             #y_out = tf.sigmoid(y_out)
             #self.variable_summaries(y_out)
             tf.summary.histogram('y_out', y_out_hidden)
@@ -145,16 +148,16 @@ class NN(object):
         with tf.name_scope('loss'):
             # loss
             if self.use_propensity:
-                crs_entrpy = tf.add(tf.multiply(y, tf.log(y_out)), tf.multiply(1-y, tf.log(1-y_out)))
-                loss = -tf.reduce_sum(tf.multiply(crs_entrpy, tf.expand_dims(self.label_prop, 0)))
-                #loss = tf.reduce_sum(tf.multiply(tf.nn.sigmoid_cross_entropy_with_logits(labels=y, logits=y_out), tf.expand_dims(self.label_prop, 0))) \
+                #crs_entrpy = tf.add(tf.multiply(y, tf.log(y_out)), tf.multiply(1-y, tf.log(1-y_out)))
+                #loss = -tf.reduce_sum(tf.multiply(crs_entrpy, tf.expand_dims(self.label_prop, 0)))
+                loss = tf.reduce_sum(tf.multiply(tf.nn.sigmoid_cross_entropy_with_logits(labels=y, logits=y_out), tf.expand_dims(self.label_prop, 0))) \
                 #       + 3*tf.nn.l2_loss(self.weight_1) + 2*tf.nn.l2_loss(self.weight_2)
                 # self.lamb*tf.nn.l2_loss(weight_1) + self.lamb*tf.nn.l2_loss(weight_2)
                 # loss = -tf.reduce_sum(tf.multiply(tf.add(tf.multiply(y, tf.log(y_out)), tf.multiply(1-y, tf.log(1-y_out))), tf.expand_dims(self.label_prop, 0)))
             else:
                 loss = tf.reduce_sum(tf.nn.sigmoid_cross_entropy_with_logits(labels=y, logits=y_out))
         tf.summary.scalar('loss', loss)
-        return x_emb, y_out, loss, tf.nn.l2_loss(self.weight_1), tf.nn.l2_loss(self.weight_2), tf.reduce_sum(tf.where(tf.equal(y_out_1, 0), tf.zeros_like(y_out_1), tf.ones_like(y_out_1)))
+        return x_emb, y_out, loss, tf.nn.l2_loss(self.word_embedding), tf.nn.l2_loss(self.weight_1), tf.reduce_sum(tf.where(tf.greater(y_out_1, 0), tf.ones_like(y_out_1), tf.zeros_like(y_out_1)))
 
     def t_sne(self):
         # x_1: [1, max_seq_len]
