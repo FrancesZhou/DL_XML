@@ -220,7 +220,7 @@ def get_label_propensity(args, dir_name, sort_labels, train_pid_label, A=0.55, B
 def main():
     parse = argparse.ArgumentParser()
     parse.add_argument('-data', '--data', type=str, default='eurlex', help='which dataset to preprocess')
-    parse.add_argument('-valid_labels', '-valid_labels', type=bool, default=True, help='if remove invalid labels')
+    parse.add_argument('-valid_labels', '-valid_labels', type=int, default=1, help='if remove invalid labels')
     args = parse.parse_args()
     if args.valid_labels:
         if not os.path.exists(args.data + '/sources/valid_label_data/'):

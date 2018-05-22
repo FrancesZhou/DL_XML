@@ -21,8 +21,8 @@ def main():
     # ---------- environment setting: which gpu -------
     parse.add_argument('-gpu', '--gpu', type=str, default='0', help='which gpu to use: 0 or 1')
     # ---------- foler path of train/test data -------
-    parse.add_argument('-valid_labels', '--valid_labels', type=bool,
-                       default=True, help='-if remove invalid labels')
+    parse.add_argument('-valid_labels', '--valid_labels', type=int,
+                       default=0, help='-if remove invalid labels')
     parse.add_argument('-folder', '--folder_path', type=str,
                        default='datasets/eurlex/trn_tst_data/',
                        help='path to train/test data')
