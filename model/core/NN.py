@@ -149,7 +149,7 @@ class NN(object):
                 loss = tf.reduce_sum(tf.nn.sigmoid_cross_entropy_with_logits(labels=y, logits=y_out))
                 #loss = -tf.reduce_sum(tf.add(tf.multiply(y, tf.log(y_out)), tf.multiply(1 - y, tf.log(1 - y_out))))
         tf.summary.scalar('loss', loss)
-        return x_emb, tf.sigmoid(y_out), loss
+        return x_emb, tf.sigmoid(y_out), loss, tf.nn.l2_loss(self.weight_1), tf.nn.l2_loss(self.weight_2)
 
     def t_sne(self):
         # x_1: [1, max_seq_len]
