@@ -165,7 +165,6 @@ def get_train_test_data(args, A, B):
             # add features
             l_str = l_str + s_
             df.write(l_str)
-            df.write(s_)
     #return fea_num, label_num, train_doc_wordID, train_label, test_doc_wordID, test_label, train_label_feature_str, test_label_feature_str
     sort_labels, _ = zip(*sorted(label_dict.items(), key=lambda e: e[1]))
     get_label_propensity(args, trn_tst_data_dir, sort_labels, train_label, A, B)
