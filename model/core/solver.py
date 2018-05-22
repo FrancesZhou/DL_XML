@@ -130,6 +130,8 @@ class ModelSolver(object):
                         pbar.update(i)
                         p1_f_id, p1_f_v, p2_f_id, p2_f_v, p2_dis = train_loader.get_pid_pid_dis(sne_pids[i])
                         #print p1_f_id
+                        p1_f_v = p1_f_v/np.linalg.norm(p1_f_v, 2, axis=1, keepdims=True)
+                        p2_f_v = p2_f_v/np.linalg.norm(p2_f_v, 2, axis=1, keepdims=True)
                         feed_dict = {self.model.p1_f_id: np.array(p1_f_id, dtype=np.int32),
                                      self.model.p1_f_v: p1_f_v,
                                      self.model.p2_f_id: p2_f_id,
