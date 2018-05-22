@@ -142,14 +142,14 @@ class NN(object):
             if self.use_propensity:
                 #crs_entrpy = tf.add(tf.multiply(y, tf.log(y_out)), tf.multiply(1-y, tf.log(1-y_out)))
                 #loss = tf.reduce_sum(tf.multiply(crs_entrpy, tf.expand_dims(self.label_prop, 0)))
-                loss = tf.reduce_sum(tf.multiply(tf.nn.sigmoid_cross_entropy_with_logits(labels=y, logits=y_out), tf.expand_dims(self.label_prop, 0)))
+                loss = tf.reduce_sum(tf.multiply(tf.nn.sigmoid_cross_entropy_with_logits(labels=y, logits=y_out), tf.expand_dims(self.label_prop, 0))) + 3*tf.nn.l2_loss(self.weight_1) + 2*tf.nn.l2_loss(self.weight_2)
                 # ) + self.lamb*tf.nn.l2_loss(weight_1) + self.lamb*tf.nn.l2_loss(weight_2)
                 #loss = -tf.reduce_sum(tf.multiply(tf.add(tf.multiply(y, tf.log(y_out)), tf.multiply(1-y, tf.log(1-y_out))), tf.expand_dims(self.label_prop, 0)))
             else:
                 loss = tf.reduce_sum(tf.nn.sigmoid_cross_entropy_with_logits(labels=y, logits=y_out))
                 #loss = -tf.reduce_sum(tf.add(tf.multiply(y, tf.log(y_out)), tf.multiply(1 - y, tf.log(1 - y_out))))
         tf.summary.scalar('loss', loss)
-        return x_emb, tf.sigmoid(y_out), loss, tf.nn.l2_loss(self.weight_1), tf.nn.l2_loss(self.weight_2)
+        return x_emb, tf.sigmoid(y_out), loss, tf.nn.l2_loss(self.weight_1), tf.nn.l2_loss(self.weight_2), tf.reduce_sum(tf.where(tf.greater(y_out, 0), tf.ones_like(y_out), tf.zeros_like(y_out)))
 
     def t_sne(self):
         # x_1: [1, max_seq_len]

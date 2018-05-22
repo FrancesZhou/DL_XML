@@ -62,9 +62,10 @@ class ModelSolver(object):
         train_loader = self.train_data
         test_loader = self.test_data
         # build_model
-        _, y_, loss, w_1, w_2 = self.model.build_model()
+        _, y_, loss, w_1, w_2, y_out = self.model.build_model()
         w1_l = 0
         w2_l = 0
+        y_out_vis = 0
         sne_loss = self.model.t_sne()
         # train op
         with tf.name_scope('optimizer'):
@@ -114,7 +115,7 @@ class ModelSolver(object):
                                  self.model.x_feature_v: np.array(x_feature_v, dtype=np.float32),
                                  self.model.y: np.array(y, dtype=np.float32)
                                  }
-                    _, l_, w1_l, w2_l = sess.run([train_op, loss, w_1, w_2], feed_dict)
+                    _, l_, w1_l, w2_l, y_out_vis = sess.run([train_op, loss, w_1, w_2, y_out], feed_dict)
                     if i == len(train_pid_batches)-1:
                         train_summary = sess.run(merged, feed_dict)
                         train_writer.add_summary(train_summary, e)
@@ -181,7 +182,7 @@ class ModelSolver(object):
                 # reset train_loader
                 train_loader.reset_data()
                 # ====== output loss ======
-                w_text = 'at epoch %d, train loss is %f, w_1 is %f, w_2 is %f ' % (e, curr_loss/len(train_pid_batches), w1_l, w2_l)
+                w_text = 'at epoch %d, train loss is %f, w_1 is %f, w_2 is %f, y_out_add is %f ' % (e, curr_loss/len(train_pid_batches), w1_l, w2_l, y_out_vis)
                 print w_text
                 o_file.write(w_text)
                 w_text = 'at epoch %d, sne loss is %f ' % (e, curr_sne_loss / num_sne_points)
