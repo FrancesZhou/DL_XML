@@ -75,7 +75,7 @@ class ModelSolver(object):
             train_op = optimizer.minimize(loss, global_step=tf.train.get_global_step())
             sne_train_op = optimizer.minimize(sne_loss, global_step=tf.train.get_global_step())
         # summay
-        merged = tf.summary.merge_all()
+        # merged = tf.summary.merge_all()
         tf.get_variable_scope().reuse_variables()
         #
         # set upper limit of used gpu memory
@@ -120,9 +120,9 @@ class ModelSolver(object):
                                  self.model.y: np.array(y, dtype=np.float32)
                                  }
                     _, l_, w1_l, w2_l, y_out_vis = sess.run([train_op, loss, w_1, w_2, y_out], feed_dict)
-                    if i == len(train_pid_batches)-1:
-                        train_summary = sess.run(merged, feed_dict)
-                        train_writer.add_summary(train_summary, e)
+                    #if i == len(train_pid_batches)-1:
+                    #    train_summary = sess.run(merged, feed_dict)
+                    #    train_writer.add_summary(train_summary, e)
                     curr_loss += l_
                 pbar.finish()
                 # ---- sne regularization ----

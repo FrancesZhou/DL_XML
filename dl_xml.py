@@ -101,7 +101,8 @@ def main():
                          model_path=args.folder_path + args.model + '/',
                          log_path=args.folder_path + args.model + '/',
                          test_path=args.folder_path + args.model + '/',
-                         use_sne=args.use_sne
+                         use_sne=args.use_sne,
+                         saved_dis=args.saved_dis
                          )
     # train
     if args.train:
