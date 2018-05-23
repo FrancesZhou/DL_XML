@@ -130,14 +130,17 @@ class NN(object):
             elif self.aggr_type == 'max':
                 x_emb = tf.reduce_max(fea_v, axis=1)
             if self.use_bi_inter:
-                bi_out = 1/2*(tf.subtract(tf.square(tf.reduce_sum(fea_v), axis=1),
+                bi_out = 1/2*(tf.subtract(tf.square(tf.reduce_sum(fea_v, axis=1)),
                                           tf.reduce_sum(tf.square(fea_v), axis=1)))
-                x_emb = tf.concat([x_emb, bi_out], axis=-1)
+                #x_emb = bi_out
+                x_emb_out = tf.concat([x_emb, bi_out], axis=-1)
+            else:
+                x_emb_out = x_emb
 
             # x_emb: [batch_size, word_embedding_dim]
             tf.summary.histogram('x_emb', x_emb)
         with tf.name_scope('output'):
-            y_hidden = tf.nn.relu(tf.add(tf.matmul(x_emb, self.weight_1), self.bias_1))
+            y_hidden = tf.nn.relu(tf.add(tf.matmul(x_emb_out, self.weight_1), self.bias_1))
             tf.summary.histogram('y_hidden', y_hidden)
             # BN and dropout
             #y_hidden = tf.layers.batch_normalization(y_hidden, training=self.training)
