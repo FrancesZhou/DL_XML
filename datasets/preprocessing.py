@@ -236,14 +236,14 @@ def prepare_trn_tst_data(args):
     with open(train_data_file, 'w') as df:
         df.write('{0} {1} {2}\n'.format(len(trn_index_data), fea_num, label_num))
         for i_str in trn_index_data:
-            i_, _ = i_str.split(' ')
+            i_, _ = i_str.split(' ', 1)
             trn_index.append(int(i_))
             df.write(all_data[int(i_)])
     test_data_file = '{0}/sources/xml/{1}_test.txt'.format(args.data, args.data)
     with open(test_data_file, 'w') as df:
         df.write('{0} {1} {2}\n'.format(len(tst_index_data), fea_num, label_num))
         for i_str in tst_index_data:
-            i_, _ = i_str.split(' ')
+            i_, _ = i_str.split(' ', 1)
             tst_index.append(int(i_))
             df.write(all_data[int(i_)])
     trn_index = np.unique(trn_index)

@@ -126,6 +126,7 @@ class ModelSolver(object):
                     curr_loss += l_
                 pbar.finish()
                 # ---- sne regularization ----
+                num_sne_points = 100
                 if self.use_sne:
                     sne_pids = train_loader.pid_dis_keys
                     np.random.shuffle(sne_pids)
