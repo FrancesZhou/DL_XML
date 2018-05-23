@@ -217,9 +217,45 @@ def get_label_propensity(args, dir_name, sort_labels, train_pid_label, A=0.55, B
         #     df.write('\n')
         #     df.write(str(inv_prop_dict[k_]))
 
+def prepare_trn_tst_data(args):
+    data_file = '{0}/sources/xml/{1}_data.txt'.format(args.data, args.data)
+    trn_split_file = '{0}/sources/xml/{1}_trSplit.txt'.format(args.data, args.data)
+    tst_split_file = '{0}/sources/xml/{1}_tstSplit.txt'.format(args.data, args.data)
+    all_data = load_txt(data_file)
+    head_str = all_data[0]
+    ins_num, fea_num, label_num = head_str.split(' ')
+    fea_num = int(fea_num)
+    label_num = int(label_num)
+    #
+    trn_index_data = load_txt(trn_split_file)
+    tst_index_data = load_txt(tst_split_file)
+    trn_index = []
+    tst_index = []
+    # train
+    train_data_file = '{0}/sources/xml/{1}_train.txt'.format(args.data, args.data)
+    with open(train_data_file, 'w') as df:
+        df.write('{0} {1} {2}\n'.format(len(trn_index_data), fea_num, label_num))
+        for i_str in trn_index_data:
+            i_, _ = i_str.split(' ')
+            trn_index.append(int(i_))
+            df.write(all_data[int(i_)])
+    test_data_file = '{0}/sources/xml/{1}_test.txt'.format(args.data, args.data)
+    with open(test_data_file, 'w') as df:
+        df.write('{0} {1} {2}\n'.format(len(tst_index_data), fea_num, label_num))
+        for i_str in tst_index_data:
+            i_, _ = i_str.split(' ')
+            tst_index.append(int(i_))
+            df.write(all_data[int(i_)])
+    trn_index = np.unique(trn_index)
+    tst_index = np.unique(tst_index)
+    print 'train data: {0}'.format(len(trn_index))
+    print 'test data: {0}'.format(len(tst_index))
+    print 'all data: {0}'.format(int(ins_num))
+
 def main():
     parse = argparse.ArgumentParser()
     parse.add_argument('-data', '--data', type=str, default='eurlex', help='which dataset to preprocess')
+    parse.add_argument('-preprocess', '--preprocess', type=int, default=0, help='if preprocess for train/test data')
     parse.add_argument('-valid_labels', '-valid_labels', type=int, default=0, help='if remove invalid labels')
     args = parse.parse_args()
     if args.valid_labels:
@@ -232,6 +268,8 @@ def main():
             os.makedirs(args.data + '/sources/all_label_data/')
         if not os.path.exists(args.data + '/trn_tst_data/all_label_data/'):
             os.makedirs(args.data + '/trn_tst_data/all_label_data/')
+    if args.preprocess:
+        prepare_trn_tst_data(args)
     if 'amazon' in args.data:
         A, B = (0.6, 2.6)
     elif 'wiki' in args.data:
