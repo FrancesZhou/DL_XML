@@ -41,6 +41,7 @@ class ModelSolver(object):
         self.pretrained_model = kwargs.pop('pretrained_model', None)
         self.test_path = kwargs.pop('test_path', None)
         self.use_sne = kwargs.pop('use_sne', 0)
+        self.saved_dis = kwargs.pop('saved_dis', 0)
         if not os.path.exists(self.model_path):
             os.makedirs(self.model_path)
         if not os.path.exists(self.log_path):
@@ -90,7 +91,10 @@ class ModelSolver(object):
                 saver.restore(sess, pretrained_model_path)
             # ============== begin training ===================
             if self.use_sne:
-                train_loader.get_distance_matrix()
+                if self.saved_dis:
+                    train_loader.load_distance_matrix()
+                else:
+                    train_loader.get_distance_matrix()
             for e in xrange(self.n_epochs):
                 print '========== begin epoch %d ===========' % e
                 curr_loss = 0
@@ -226,8 +230,8 @@ class ModelSolver(object):
                                      self.model.y: np.array(y)
                                      }
                         y_p, l_ = sess.run([y_, loss], feed_dict)
-                        test_summary = sess.run(merged, feed_dict)
-                        test_writer.add_summary(test_summary, i)
+                        # test_summary = sess.run(merged, feed_dict)
+                        # test_writer.add_summary(test_summary, i)
                         test_loss += l_
                         # prediction
                         for p_i in xrange(len(batch_pid)):

@@ -33,6 +33,8 @@ def main():
     parse.add_argument('-pretrained_model', '--pretrained_model_path', type=str, default=None, help='path to the pretrained model')
     parse.add_argument('-dropout_keep_prob', '--dropout_keep_prob', type=float,
                        default=0.5, help='keep probability in dropout layer')
+    parse.add_argument('-saved_dis', '--saved_dis', type=int, default=0,
+                       help='whether to use saved dis matrix')
     parse.add_argument('-use_sne', '--use_sne', type=int, default=1,
                        help='whether to use sne regularization')
     parse.add_argument('-ac_lbl_ratio', '--ac_lbl_ratio', type=float, default=0.5,
@@ -81,9 +83,9 @@ def main():
     test_label = load_pickle(args.folder_path + 'test_label.pkl')
     print '============== create train/test data loader ...'
     train_loader = DataLoader_all(train_doc, train_label, label_dict, label_prop,
-                                  batch_size=args.batch_size, max_seq_len=args.max_seq_len, ac_lbl_ratio=args.ac_lbl_ratio)
+                                  batch_size=args.batch_size, max_seq_len=args.max_seq_len, ac_lbl_ratio=args.ac_lbl_ratio, folder_path=args.folder_path)
     test_loader = DataLoader_all(test_doc, test_label, label_dict, label_prop,
-                                 batch_size=args.batch_size, max_seq_len=args.max_seq_len)
+                                 batch_size=args.batch_size, max_seq_len=args.max_seq_len, folder_path=args.folder_path)
     print '============== build model ...'
     print 'build NN model ...'
     model = NN(args.max_seq_len, args.vocab_size, args.word_embedding_dim, num_labels, label_prop, 32, args)

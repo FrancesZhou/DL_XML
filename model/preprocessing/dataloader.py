@@ -14,13 +14,15 @@ from scipy.sparse import csc_matrix
 from scipy.sparse import lil_matrix
 #from scipy.sparse import csr_matrix
 from ..utils.op_utils import *
+from ..utils.io_utils import *
 
 class DataLoader_all():
     def __init__(self, doc_wordID_data, label_data,
                  label_dict, label_prop,
                  batch_size,
                  max_seq_len=5000,
-                 ac_lbl_ratio=0.5):
+                 ac_lbl_ratio=0.5,
+                 folder_path=''):
         self.doc_wordID_data = doc_wordID_data
         self.x_feature_indices = {}
         self.x_feature_values = {}
@@ -36,6 +38,7 @@ class DataLoader_all():
         self.doc_length = {}
         self.initialize_dataloader()
         self.reset_data()
+        self.datapath = folder_path
 
     def initialize_dataloader(self):
         print 'num of doc: ' + str(len(self.doc_wordID_data))
@@ -141,7 +144,12 @@ class DataLoader_all():
                 self.pid_dis[self.index_pids[nz_col]][self.index_pids[nz_row]] = p_i_j
         print 'done'
         self.pid_dis_keys = self.pid_dis.keys()
+        dump_pickle(self.pid_dis, self.datapath + 'pid_dis.pkl')
         # np.random.shuffle(self.pid_pid_dis)
+
+    def load_distance_matrix(self):
+        self.pid_dis = load_pickle(self.datapath + 'pid_dis.pkl')
+        self.pid_dis_keys = self.pid_dis.keys()
 
     def get_pid_pid_dis(self, pid):
         #pid = self.index_pids[i]
