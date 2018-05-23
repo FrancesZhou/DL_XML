@@ -23,11 +23,11 @@ def main():
     # ---------- foler path of train/test data -------
     parse.add_argument('-valid_labels', '--valid_labels', type=int,
                        default=0, help='-if remove invalid labels')
-    parse.add_argument('-folder', '--folder_path', type=str,
-                       default='datasets/eurlex/trn_tst_data/',
-                       help='path to train/test data')
+    parse.add_argument('-data', '--data', type=str, default='eurlex',
+                       help='dataset')
     # ---------- model ----------
     parse.add_argument('-word_embedding_dim', '--word_embedding_dim', type=int, default=100, help='dim of word embedding')
+    parse.add_argument('-vocab_size', '--vocab_size', type=int, default=5000, help='vocabulary size')
     parse.add_argument('-max_seq_len', '--max_seq_len', type=int, default=500, help='maximum sequence length')
     parse.add_argument('-model', '--model', type=str, default='NN', help='model: NN, LSTM, biLSTM, CNN')
     parse.add_argument('-pretrained_model', '--pretrained_model_path', type=str, default=None, help='path to the pretrained model')
@@ -60,10 +60,11 @@ def main():
 
     os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
     print '-------------- load labels ------------------------'
+    # default='datasets/eurlex/trn_tst_data/'
     if args.valid_labels:
-        args.folder_path = args.folder_path + 'valid_label_data/'
+        args.folder_path = 'datasets/' + args.data + 'trn_tst_data/valid_label_data/'
     else:
-        args.folder_path = args.folder_path + 'all_label_data/'
+        args.folder_path = 'datasets/' + args.data + 'trn_tst_data/all_label_data/'
     #label_prop_dict = load_pickle(args.folder_path + 'inv_prop_dict.pkl')
     label_prop = load_pickle(args.folder_path + 'inv_prop.pkl')
     label_dict = load_pickle(args.folder_path + 'label_dict.pkl')
@@ -85,7 +86,7 @@ def main():
                                  batch_size=args.batch_size, max_seq_len=args.max_seq_len)
     print '============== build model ...'
     print 'build NN model ...'
-    model = NN(args.max_seq_len, 5000, args.word_embedding_dim, num_labels, label_prop, 32, args)
+    model = NN(args.max_seq_len, args.vocab_size, args.word_embedding_dim, num_labels, label_prop, 32, args)
     args.if_use_seq_len = 1
 
     print '================= model solver ...'
