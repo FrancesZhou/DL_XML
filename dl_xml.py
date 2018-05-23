@@ -62,9 +62,9 @@ def main():
     print '-------------- load labels ------------------------'
     # default='datasets/eurlex/trn_tst_data/'
     if args.valid_labels:
-        args.folder_path = 'datasets/' + args.data + 'trn_tst_data/valid_label_data/'
+        args.folder_path = 'datasets/' + args.data + '/trn_tst_data/valid_label_data/'
     else:
-        args.folder_path = 'datasets/' + args.data + 'trn_tst_data/all_label_data/'
+        args.folder_path = 'datasets/' + args.data + '/trn_tst_data/all_label_data/'
     #label_prop_dict = load_pickle(args.folder_path + 'inv_prop_dict.pkl')
     label_prop = load_pickle(args.folder_path + 'inv_prop.pkl')
     label_dict = load_pickle(args.folder_path + 'label_dict.pkl')
