@@ -35,6 +35,8 @@ class NN(object):
         #
         with tf.name_scope('word_embedding'):
             self.word_embedding = tf.get_variable('word_embedding', [vocab_size, word_embedding_dim], initializer=self.weight_initializer)
+            self.word_embeddings_padding = tf.concat((tf.constant(0, dtype=tf.float32, shape=[1, self.word_embedding_dim]),
+                                                 self.word_embedding), axis=0)
             self.variable_summaries(self.word_embedding)
         with tf.name_scope('weight_1'):
             if self.use_bi_inter:
@@ -109,36 +111,39 @@ class NN(object):
         # P_reset + p_tmp
         return tf.add(P_reset, P_tmp)
 
+    def embedding_layer(self, fea_v):
+        if self.aggr_type == 'sum':
+            x_emb = tf.reduce_sum(fea_v, axis=1)
+        elif self.aggr_type == 'ave':
+            x_emb = tf.reduce_mean(fea_v, axis=1)
+        elif self.aggr_type == 'max':
+            x_emb = tf.reduce_max(fea_v, axis=1)
+        if self.use_bi_inter:
+            bi_out = 1 / 2 * (tf.subtract(tf.square(tf.reduce_sum(fea_v, axis=1)),
+                                          tf.reduce_sum(tf.square(fea_v), axis=1)))
+            # x_emb = bi_out
+            x_emb_out = tf.concat([x_emb, bi_out], axis=-1)
+        else:
+            x_emb_out = x_emb
+
+        # x_emb: [batch_size, word_embedding_dim]
+        #tf.summary.histogram('x_emb', x_emb)
+        return x_emb_out
+    
     def build_model(self):
         # x: [batch_size, max_seq_len]
         # y: [batch_size, label_output_dim]
         feature_v = self.x_feature_v
         y = self.y
         with tf.name_scope('word_embedding'):
-            word_embeddings_padding = tf.concat((tf.constant(0, dtype=tf.float32, shape=[1, self.word_embedding_dim]),
-                                                 self.word_embedding), axis=0)
-            x = tf.nn.embedding_lookup(word_embeddings_padding, self.x_feature_id)
+            x = tf.nn.embedding_lookup(self.word_embeddings_padding, self.x_feature_id)
             # x: [batch_size, max_seq_len, word_embedding_dim]
             # x_emb
             #feature_v = tf.layers.batch_normalization(feature_v, training=self.training)
             #feature_v = tf.layers.dropout(feature_v, rate=self.dropout_keep_prob, training=self.training)
             fea_v = tf.multiply(x, tf.expand_dims(feature_v, -1))
-            if self.aggr_type == 'sum':
-                x_emb = tf.reduce_sum(fea_v, axis=1)
-            elif self.aggr_type == 'ave':
-                x_emb = tf.reduce_mean(fea_v, axis=1)
-            elif self.aggr_type == 'max':
-                x_emb = tf.reduce_max(fea_v, axis=1)
-            if self.use_bi_inter:
-                bi_out = 1/2*(tf.subtract(tf.square(tf.reduce_sum(fea_v, axis=1)),
-                                          tf.reduce_sum(tf.square(fea_v), axis=1)))
-                #x_emb = bi_out
-                x_emb_out = tf.concat([x_emb, bi_out], axis=-1)
-            else:
-                x_emb_out = x_emb
+            x_emb_out = self.embedding_layer(fea_v)
 
-            # x_emb: [batch_size, word_embedding_dim]
-            tf.summary.histogram('x_emb', x_emb)
         with tf.name_scope('output'):
             y_hidden = tf.nn.relu(tf.add(tf.matmul(x_emb_out, self.weight_1), self.bias_1))
             tf.summary.histogram('y_hidden', y_hidden)
@@ -170,20 +175,20 @@ class NN(object):
             else:
                 loss = tf.reduce_sum(tf.nn.sigmoid_cross_entropy_with_logits(labels=y, logits=y_out))
         tf.summary.scalar('loss', loss)
-        return x_emb, y_out, loss, tf.nn.l2_loss(self.weight_1), tf.nn.l2_loss(self.weight_2), tf.reduce_sum(tf.where(tf.greater(y_out_1, 0), tf.ones_like(y_out_1), tf.zeros_like(y_out_1)))
+        return x_emb_out, y_out, loss, tf.nn.l2_loss(self.weight_1), tf.nn.l2_loss(self.weight_2), tf.reduce_sum(tf.where(tf.greater(y_out_1, 0), tf.ones_like(y_out_1), tf.zeros_like(y_out_1)))
 
     def t_sne(self):
         # x_1: [1, max_seq_len]
         # x_2: [all, max_seq_len]
         with tf.name_scope('x_emb'):
-            word_embeddings_padding = tf.concat((tf.constant(0, dtype=tf.float32, shape=[1, self.word_embedding_dim]),
-                                                 self.word_embedding), axis=0)
             # x: [none, max_seq_len, word_embedding_dim]
             # x_emb: [none, word_embedding_dim]
-            x_1 = tf.nn.embedding_lookup(word_embeddings_padding, self.p1_f_id)
-            x_1_emb = tf.reduce_sum(tf.multiply(x_1, tf.expand_dims(self.p1_f_v, -1)), axis=1)
-            x_2 = tf.nn.embedding_lookup(word_embeddings_padding, self.p2_f_id)
-            x_2_emb = tf.reduce_sum(tf.multiply(x_2, tf.expand_dims(self.p2_f_v, -1)), axis=1)
+            x_1 = tf.nn.embedding_lookup(self.word_embeddings_padding, self.p1_f_id)
+            fea_1 = tf.multiply(x_1, tf.expand_dims(self.p1_f_v, -1))
+            x_1_emb = self.embedding_layer(fea_1)
+            x_2 = tf.nn.embedding_lookup(self.word_embeddings_padding, self.p2_f_id)
+            fea_2 = tf.multiply(x_2, tf.expand_dims(self.p2_f_v, -1))
+            x_2_emb = self.embedding_layer(fea_2)
             # q_i_j
         with tf.name_scope('distance'):
             dis = tf.reciprocal(tf.norm(x_1_emb - x_2_emb, axis=1) + 1)
