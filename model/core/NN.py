@@ -19,11 +19,13 @@ class NN(object):
         self.batch_size = args.batch_size
         self.dropout_keep_prob = args.dropout_keep_prob
         #
+        self.use_bi_inter = args.use_bi_inter
         self.use_propensity = args.use_propensity
         self.use_comp = args.use_comp
         self.topk = args.topk
         self.factor = args.factor
         self.lamb = args.lamb
+        self.aggr_type = args.aggr_type
         #
         self.weight_initializer = tf.contrib.layers.xavier_initializer()
         self.const_initializer = tf.constant_initializer()
@@ -35,7 +37,11 @@ class NN(object):
             self.word_embedding = tf.get_variable('word_embedding', [vocab_size, word_embedding_dim], initializer=self.weight_initializer)
             self.variable_summaries(self.word_embedding)
         with tf.name_scope('weight_1'):
-            self.weight_1 = tf.get_variable('weight_1', [self.word_embedding_dim, self.num_classify_hidden],
+            if self.use_bi_inter:
+                self.weight_1 = tf.get_variable('weight_1', [2*self.word_embedding_dim, self.num_classify_hidden],
+                                                initializer=self.weight_initializer)
+            else:
+                self.weight_1 = tf.get_variable('weight_1', [self.word_embedding_dim, self.num_classify_hidden],
                                             initializer=self.weight_initializer)
             self.variable_summaries(self.weight_1)
         with tf.name_scope('bias_1'):
@@ -116,7 +122,18 @@ class NN(object):
             # x_emb
             #feature_v = tf.layers.batch_normalization(feature_v, training=self.training)
             #feature_v = tf.layers.dropout(feature_v, rate=self.dropout_keep_prob, training=self.training)
-            x_emb = tf.reduce_sum(tf.multiply(x, tf.expand_dims(feature_v, -1)), axis=1)
+            fea_v = tf.multiply(x, tf.expand_dims(feature_v, -1))
+            if self.aggr_type == 'sum':
+                x_emb = tf.reduce_sum(fea_v, axis=1)
+            elif self.aggr_type == 'ave':
+                x_emb = tf.reduce_mean(fea_v, axis=1)
+            elif self.aggr_type == 'max':
+                x_emb = tf.reduce_max(fea_v, axis=1)
+            if self.use_bi_inter:
+                bi_out = 1/2*(tf.subtract(tf.square(tf.reduce_sum(fea_v), axis=1),
+                                          tf.reduce_sum(tf.square(fea_v), axis=1)))
+                x_emb = tf.concat([x_emb, bi_out], axis=-1)
+
             # x_emb: [batch_size, word_embedding_dim]
             tf.summary.histogram('x_emb', x_emb)
         with tf.name_scope('output'):

@@ -27,6 +27,7 @@ def main():
                        help='dataset')
     # ---------- model ----------
     parse.add_argument('-word_embedding_dim', '--word_embedding_dim', type=int, default=100, help='dim of word embedding')
+    parse.add_argument('-aggr_type', '--aggr_type', type=str, default='sum', help='aggregation type in embedding layer')
     parse.add_argument('-vocab_size', '--vocab_size', type=int, default=5000, help='vocabulary size')
     parse.add_argument('-max_seq_len', '--max_seq_len', type=int, default=500, help='maximum sequence length')
     parse.add_argument('-model', '--model', type=str, default='NN', help='model: NN, LSTM, biLSTM, CNN')
@@ -41,6 +42,8 @@ def main():
                        help='ratio of active labels in sne regularization')
     parse.add_argument('-use_propensity', '--use_propensity', type=int, default=1,
                        help='whether to use propensity loss')
+    parse.add_argument('-use_bi_inter', '--use_bi_inter', type=int, default=0,
+                       help='whether to add bi-interactive layer')
     parse.add_argument('-use_comp', '--use_comp', type=int, default=0,
                        help='whether to add competitive layer')
     parse.add_argument('-topk', '--topk', type=int, default=10,
